@@ -1,5 +1,4 @@
 from read_files import read_files
-from config import LOG_FILE, OUTPUT_FILE
 from parse_url import (
     Link,
     verify_link
@@ -11,9 +10,9 @@ from output import Output
 from tqdm.auto import tqdm
 
 
-def context_manager(filepath, count):
+def context_manager(filepath, count, output_path, log_path):
 
-    with open(OUTPUT_FILE, "w") as output_file, open(LOG_FILE, "w") as log_file:
+    with open(output_path, "w") as output_file, open(log_path, "w") as log_file:
 
         # ------------------------------------ #
         # Create the error log CSV
