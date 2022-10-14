@@ -1,31 +1,26 @@
 import click
-import csv
+import os
 
-from configure_data import (
-    verify_data_file,
-    verify_link,
-    Link
+from exceptions import (
+    DataFileNotFound
 )
+from read_files import read_files
 
 
 @click.command
 @click.argument("filepath")
 def main(filepath):
+    # ------------------------------------ #
+    # Raise an error if the given filepath is invalid
+    # ------------------------------------ #
+    if not os.path.isfile(filepath):
+        raise DataFileNotFound(filepath)
 
-    data = verify_data_file(filepath)
-
-    with open(filepath, "r") as f:
-        reader = csv.DictReader(f)
-
-        results = []
-
-        for row in reader:
-            url = row.get("links")
-            if verify_link(url):
-                link = Link(url)
-                results.append(link.normalized_url)
-        
-        print(results[:10])
+    # ------------------------------------ #
+    # Otherwise, read the files and extract a list of links of type Link() from configure_data.py
+    # ------------------------------------ #
+    else:
+        links = read_files(filepath)
 
 
 if __name__ == "__main__":

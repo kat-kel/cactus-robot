@@ -1,9 +1,4 @@
-import csv
-import os
-
 from exceptions import (
-    DataFileNotFound,
-    FileTypeError,
     InvalidURL
 )
 
@@ -13,21 +8,6 @@ from ural import (
     is_url,
     normalize_url
 )
-
-
-# -----------------------------------
-# Parse data file
-# -----------------------------------
-def verify_data_file(filepath):
-
-    if not os.path.isfile(filepath):
-        raise DataFileNotFound(filepath)
-
-    ext = os.path.splitext(filepath)[-1]
-    if ext != ".csv":
-        raise FileTypeError(ext)
-    
-    return True
 
 
 # -----------------------------------
