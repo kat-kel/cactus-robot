@@ -22,7 +22,7 @@ def main(filepath):
         raise DataFileNotFound(filepath)
 
     # ------------------------------------ #
-    # Otherwise, read the files and extract a list of links of type Link() from configure_data.py
+    # Manage the parsing, error logging, and output of links in the input file
     # ------------------------------------ #
     else:
         context_manager(filepath)

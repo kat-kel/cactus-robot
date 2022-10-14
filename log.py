@@ -1,4 +1,3 @@
-from asyncore import write
 import csv
 
 from config import LOG_FILE
