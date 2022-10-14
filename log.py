@@ -17,3 +17,7 @@ class LogInvalidURL:
     def log_error(self, url:str, error:str):
         self.writer.writerow({FIELDNAMES[0]:url, FIELDNAMES[1]:error})
         
+
+class ErrorMessage:
+    def __init__(self, message):
+        self.message = message
