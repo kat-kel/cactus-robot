@@ -23,5 +23,9 @@ class FileTypeError(Exception):
 
 
 class InvalidURL(Exception):
-    def __init__(self, *args):
+    def __init__(self, url=None, *args):
         super().__init__(args)
+        self.url = url
+
+    def __str__(self) -> str:
+        return f"{yellow}The URL is invalid: {end} {red}{self.url}{end}"
