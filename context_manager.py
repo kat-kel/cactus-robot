@@ -28,28 +28,28 @@ def context_manager(filepath, count):
         output.writer.writeheader()
 
         # ------------------------------------ #
-        # Parse each row of the input data file
+        # Adjust for a progress bar
         # ------------------------------------ #
         if count:
-            for row in tqdm(read_files(filepath), total=int(count), desc="Progress Bar", dynamic_ncols=True):
-                parse_row(row, error_log, output)
-
+            reader = tqdm(read_files(filepath), total=int(count), desc="Progress Bar", dynamic_ncols=True)
         else:
-            for row in read_files(filepath):
-                parse_row(row, error_log, output)
+            reader = read_files(filepath)
 
+        # ------------------------------------ #
+        # Parse each row of the data file
+        # ------------------------------------ #
+        for row in reader:
+            url = row.get("links")
 
-def parse_row(row, error_log, output):
-    url = row.get("links")
-    # ------------------------------------ #
-    # Log invalid URLs
-    # ------------------------------------ #
-    error = verify_link(url)
-    if error:
-        error_log.log_error(url, error.message)
+            # ------------------------------------ #
+            # Log invalid URLs
+            # ------------------------------------ #
+            error = verify_link(url)
+            if error:
+                error_log.log_error(url, error.message)
 
-    # ------------------------------------ #
-    # Output URL data
-    # ------------------------------------ #
-    else:
-        output.update(Link(url))
+            # ------------------------------------ #
+            # Output URL data
+            # ------------------------------------ #
+            else:
+                output.update(Link(url))
