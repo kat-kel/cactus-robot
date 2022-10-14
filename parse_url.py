@@ -19,7 +19,7 @@ def verify_link(url):
     
     # Check that the URL is not shortened
     elif ural_should_resolve(url):
-        return ErrorMessage("should be resolved")
+        return ErrorMessage("not resolved")
     
     else:
         return None

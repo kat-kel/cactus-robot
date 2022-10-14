@@ -36,9 +36,7 @@ def context_manager(filepath):
             # ------------------------------------ #
             error = verify_link(url)
             if isinstance(error, ErrorMessage):
-                    error_log.log_error(url, error.message)
-            elif isinstance(error, str):
-                url = error
+                error_log.log_error(url, error.message)
 
             # ------------------------------------ #
             # Output URL data
