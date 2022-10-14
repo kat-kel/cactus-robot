@@ -11,7 +11,8 @@ from context_manager import context_manager
 
 @click.command
 @click.argument("filepath")
-def main(filepath):
+@click.option("--count", default=None)
+def main(filepath, count):
 
     recreate_log_file()
 
@@ -25,7 +26,7 @@ def main(filepath):
     # Manage the parsing, error logging, and output of links in the input file
     # ------------------------------------ #
     else:
-        context_manager(filepath)
+        context_manager(filepath, count)
 
 
 if __name__ == "__main__":

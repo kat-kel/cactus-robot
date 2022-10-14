@@ -8,9 +8,10 @@ from log import (
     LogInvalidURL,
 )
 from output import Output
+from tqdm.auto import tqdm
 
 
-def context_manager(filepath):
+def context_manager(filepath, count):
 
     with open(OUTPUT_FILE, "w") as output_file, open(LOG_FILE, "w") as log_file:
 
@@ -26,19 +27,29 @@ def context_manager(filepath):
         output = Output(output_file)
         output.writer.writeheader()
 
-        for row in read_files(filepath):
+        # ------------------------------------ #
+        # Parse each row of the input data file
+        # ------------------------------------ #
+        if count:
+            for row in tqdm(read_files(filepath), total=int(count), desc="Progress Bar", dynamic_ncols=True):
+                parse_row(row, error_log, output)
 
-            url = row.get("links")
+        else:
+            for row in read_files(filepath):
+                parse_row(row, error_log, output)
 
-            # ------------------------------------ #
-            # Log invalid URLs
-            # ------------------------------------ #
-            error = verify_link(url)
-            if error:
-                error_log.log_error(url, error.message)
 
-            # ------------------------------------ #
-            # Output URL data
-            # ------------------------------------ #
-            else:
-                output.update(Link(url))
+def parse_row(row, error_log, output):
+    url = row.get("links")
+    # ------------------------------------ #
+    # Log invalid URLs
+    # ------------------------------------ #
+    error = verify_link(url)
+    if error:
+        error_log.log_error(url, error.message)
+
+    # ------------------------------------ #
+    # Output URL data
+    # ------------------------------------ #
+    else:
+        output.update(Link(url))
