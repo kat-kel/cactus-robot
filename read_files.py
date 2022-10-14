@@ -9,6 +9,9 @@ from exceptions import FileTypeError
 
 
 def read_files(filepath):
+    """
+    Generate a CSV DictReader of the data file being processed.
+    """
     # ------------------------------------ #
     # Read CSV file zipped in filepath
     # ------------------------------------ #

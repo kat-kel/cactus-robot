@@ -6,7 +6,6 @@ from parse_url import (
 )
 from log import (
     LogInvalidURL,
-    ErrorMessage
 )
 from output import Output
 
@@ -35,7 +34,7 @@ def context_manager(filepath):
             # Log invalid URLs
             # ------------------------------------ #
             error = verify_link(url)
-            if isinstance(error, ErrorMessage):
+            if error:
                 error_log.log_error(url, error.message)
 
             # ------------------------------------ #
