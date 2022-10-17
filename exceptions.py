@@ -17,9 +17,10 @@ class FileTypeError(Exception):
     def __init__(self, filepath=None, *args):
         super().__init__(args)
         self.fp = filepath
+        self.ext = filepath.split(".")[-1]
     
     def __str__(self) -> str:
-        return f"{yellow}The file {end}{red}{self.fp}{end} is not a valid file type. The data file must be a CSV.{end}"
+        return f"{yellow}The file {end}{red}{self.fp}{end}{yellow} is not a valid file type due to its extension {end}{red}{self.ext}{end}{yellow}. The data file must be a CSV or a CSV file zippped with gzip.{end}"
 
 
 class InvalidURL(Exception):
