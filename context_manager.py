@@ -8,9 +8,11 @@ from log import (
 )
 from output import Output
 from tqdm.auto import tqdm
+from resolve_url import resolve
 
 
 def context_manager(filepath, count, output_path, log_path):
+    internal_log = []
 
     with open(output_path, "w") as output_file, open(log_path, "w") as log_file:
 
@@ -43,12 +45,31 @@ def context_manager(filepath, count, output_path, log_path):
             # ------------------------------------ #
             # Log invalid URLs
             # ------------------------------------ #
-            error = verify_link(url)
-            if error:
-                error_log.log_error(url, error.message)
+            issue = verify_link(url)
 
+            if issue.message:
+                error_log.log_error(url, issue.message)
+                continue
+            
             # ------------------------------------ #
-            # Output URL data
+            # Get utilities ready to analyze URL
             # ------------------------------------ #
-            else:
-                output.update(Link(url))
+            link = Link(url)
+            if link.normalized_url not in internal_log:
+            
+                # ------------------------------------ #
+                # Resolve URL if needed
+                # ------------------------------------ #
+                if issue.unresolved_url:
+                    link.normalized_url = resolve(url)
+                
+                # ------------------------------------ #
+                # Output all URL data
+                # ------------------------------------ #
+                link.data()
+                output.update(link)
+
+                # ------------------------------------ #
+                # Update the internal log with new unique URL
+                # ------------------------------------ #
+                internal_log.append(link.normalized_url)

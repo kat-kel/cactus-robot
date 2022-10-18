@@ -21,7 +21,7 @@ from ural.facebook import(
     parse_facebook_url,
     FacebookGroup,
 )
-from log import ErrorMessage
+from log import Issue
 from urllib.parse import urlparse
 
 
@@ -29,17 +29,22 @@ from urllib.parse import urlparse
 # Return an error message to log if the URL is invalid.
 # -----------------------------------
 def verify_link(url):
+    issue = Issue()
 
     # Check that the URL input is a URL
-    if not is_url(url):
-        return ErrorMessage("is not URL")
+    if not is_url(url): issue.error_message("is not URL")
     
-    # Check that the URL is not shortened
+    # Check if the URL needs resolved
     elif ural_should_resolve(url):
-        return ErrorMessage("not resolved")
-    
-    else:
-        return None
+
+        # Log an error message that the URL will not be resolved
+        if not is_youtube_url(url): issue.error_message("not resolved")
+        
+        # If the URL is from Youtube, note that it should be resolved
+        else: issue.needs_resolved(url)
+
+    # If there is no error or further resolution to do, return an empty issue
+    return issue
 
 
 # -----------------------------------
@@ -49,15 +54,24 @@ class Link:
     def __init__(self, input_url):
         self.input = input_url
         self.normalized_url = ural_normalize_url(self.input)
-        self.domain = ural_get_domain_name(self.input)
-        self.subdomain = self.get_subdomain()
-        self.host = ural_get_hostname(self.input)
-        self.normalized_host = ural_get_normalized_hostname(self.input)
+        self.domain = None
+        self.subdomain = None
+        self.host = None
+        self.normalized_host = None
         self.twitter_user = None
         self.youtube_channel_name = None
         self.youtube_channel_id = None
         self.facebook_group_name = None
         self.facebook_group_id = None
+    
+    def data(self):
+        self.domain = ural_get_domain_name(self.input)
+
+        self.subdomain = self.get_subdomain()
+
+        self.host = ural_get_hostname(self.input)
+
+        self.normalized_host = ural_get_normalized_hostname(self.input)
 
         if is_twitter_url(self.input):
             screen_name = extract_screen_name_from_twitter_url(self.input)
@@ -68,14 +82,14 @@ class Link:
             parsed_url = parse_youtube_url(self.input)
             if parsed_url and isinstance(parsed_url, YoutubeChannel):
                 self.youtube_channel_id = parsed_url.id
-                self.youtube_channel_name = parsed_url.name
+                self.youtube_channel_name = parsed_url.name                
         
         if is_facebook_url(self.input):
             parsed_url = parse_facebook_url(self.input)
             if parsed_url and isinstance(parsed_url, FacebookGroup):
                 self.facebook_group_id = parsed_url.id
                 self.facebook_group_name = parsed_url.handle
-
+    
     def get_subdomain(self):
         hostname = urlparse(self.input).hostname
         subdomain = hostname.split(".")[0]

@@ -1,2 +1,4 @@
-LOG_FILE = "log.csv"
-OUTPUT_FILE = "output.csv"
+import os
+
+DEFAULT_LOG_FILE = os.path.join(".","log.csv")
+DEFAULT_OUTPUT_FILE = os.path.join(".","output.csv")

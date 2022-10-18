@@ -1,10 +1,9 @@
 import csv
 
-from config import LOG_FILE
 FIELDNAMES = ["url", "error"]
 
-def recreate_log_file():
-    with open(LOG_FILE, "w") as f:
+def recreate_log_file(log):
+    with open(log, "w") as f:
         writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
         writer.writeheader()
         writer.writerows([])
@@ -18,6 +17,13 @@ class LogInvalidURL:
         self.writer.writerow({FIELDNAMES[0]:url, FIELDNAMES[1]:error})
         
 
-class ErrorMessage:
-    def __init__(self, message):
+class Issue:
+    def __init__(self):
+        self.message = None
+        self.unresolved_url = None
+    
+    def error_message(self, message):
         self.message = message
+    
+    def needs_resolved(self, url):
+        self.unresolved_url = url

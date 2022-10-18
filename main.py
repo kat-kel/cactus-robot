@@ -8,18 +8,19 @@ from log import (
     recreate_log_file,
 )
 from context_manager import context_manager
-
-DEFAULT_OUTPUT = os.path.join(".","output.csv")
-DEFAULT_LOG = os.path.join(".", "log.csv")
+from config import (
+    DEFAULT_LOG_FILE,
+    DEFAULT_OUTPUT_FILE
+)
 
 @click.command
 @click.argument("filepath")
 @click.option("--count", default=None)
-@click.option("--output", default=DEFAULT_OUTPUT)
-@click.option("--log", default=DEFAULT_LOG)
+@click.option("--output", default=DEFAULT_OUTPUT_FILE)
+@click.option("--log", default=DEFAULT_LOG_FILE)
 def main(filepath, count, output, log):
 
-    recreate_log_file()
+    recreate_log_file(log)
 
     # ------------------------------------ #
     # Raise an error if the given filepath is invalid
