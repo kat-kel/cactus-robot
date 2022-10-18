@@ -55,7 +55,7 @@ class Link:
     def __init__(self, input_url:str, needs_resolution:bool):
         self.input = input_url
         self.needs_resolution = needs_resolution
-        self.normalized_url = ural_normalize_url(self.input)
+        self.normalized_url = None
         self.domain = None
         self.subdomain = None
         self.host = None
@@ -69,6 +69,8 @@ class Link:
         if needs_resolution:
             resolved_url = resolve(self.input)
             self.normalized_url = ural_normalize_url(resolved_url)
+        else:
+            self.normalized_url = ural_normalize_url(self.input)
 
     
     def data(self):
