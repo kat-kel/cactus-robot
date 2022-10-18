@@ -52,16 +52,14 @@ def context_manager(filepath, count, output_path, log_path):
                 continue
             
             # ------------------------------------ #
-            # Get utilities ready to analyze URL
+            # Resolve URL if needed
             # ------------------------------------ #
-            link = Link(url)
+            link = Link(url, issue.needs_resolved)
+
+            # ------------------------------------ #
+            # Filter out URLs already processed
+            # ------------------------------------ #
             if link.normalized_url not in internal_log:
-            
-                # ------------------------------------ #
-                # Resolve URL if needed
-                # ------------------------------------ #
-                if issue.unresolved_url:
-                    link.normalized_url = resolve(url)
                 
                 # ------------------------------------ #
                 # Output all URL data
@@ -70,6 +68,7 @@ def context_manager(filepath, count, output_path, log_path):
                 output.update(link)
 
                 # ------------------------------------ #
-                # Update the internal log with new unique URL
+                # Update the internal log with
+                # the newly processed unique URL
                 # ------------------------------------ #
                 internal_log.append(link.normalized_url)

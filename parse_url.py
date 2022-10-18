@@ -22,6 +22,7 @@ from ural.facebook import(
     FacebookGroup,
 )
 from log import Issue
+from resolve_url import resolve
 from urllib.parse import urlparse
 
 
@@ -41,7 +42,7 @@ def verify_link(url):
         if not is_youtube_url(url): issue.error_message("not resolved")
         
         # If the URL is from Youtube, note that it should be resolved
-        else: issue.needs_resolved(url)
+        else: issue.unresolved()
 
     # If there is no error or further resolution to do, return an empty issue
     return issue
@@ -51,8 +52,9 @@ def verify_link(url):
 # Class to store data about a URL.
 # -----------------------------------
 class Link:
-    def __init__(self, input_url):
+    def __init__(self, input_url:str, needs_resolution:bool):
         self.input = input_url
+        self.needs_resolution = needs_resolution
         self.normalized_url = ural_normalize_url(self.input)
         self.domain = None
         self.subdomain = None
@@ -63,6 +65,11 @@ class Link:
         self.youtube_channel_id = None
         self.facebook_group_name = None
         self.facebook_group_id = None
+
+        if needs_resolution:
+            resolved_url = resolve(self.input)
+            self.normalized_url = ural_normalize_url(resolved_url)
+
     
     def data(self):
         self.domain = ural_get_domain_name(self.input)

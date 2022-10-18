@@ -20,10 +20,10 @@ class LogInvalidURL:
 class Issue:
     def __init__(self):
         self.message = None
-        self.unresolved_url = None
+        self.needs_resolved = False
     
     def error_message(self, message):
         self.message = message
     
-    def needs_resolved(self, url):
-        self.unresolved_url = url
+    def unresolved(self):
+        self.needs_resolved = True
