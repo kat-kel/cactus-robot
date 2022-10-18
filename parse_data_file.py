@@ -4,7 +4,7 @@ import gzip
 from exceptions import FileTypeError
 
 
-def read_files(filepath):
+def parse_data_file(filepath):
     """
     Generate a CSV DictReader of the data file being processed.
     """

@@ -1,4 +1,4 @@
-from read_files import read_files
+from parse_data_file import parse_data_file
 from parse_url import (
     Link,
     verify_link
@@ -30,9 +30,9 @@ def context_manager(filepath, count, output_path, log_path):
         # Adjust for a progress bar
         # ------------------------------------ #
         if count:
-            reader = tqdm(read_files(filepath), total=int(count), desc="Progress Bar", dynamic_ncols=True)
+            reader = tqdm(parse_data_file(filepath), total=int(count), desc="Progress Bar", dynamic_ncols=True)
         else:
-            reader = read_files(filepath)
+            reader = parse_data_file(filepath)
 
         # ------------------------------------ #
         # Parse each row of the data file
