@@ -1,32 +1,31 @@
-from ural import (
-    is_url,
-    normalize_url as ural_normalize_url,
-    get_domain_name as ural_get_domain_name,
-    get_hostname as ural_get_hostname,
-    get_normalized_hostname as ural_get_normalized_hostname,
-    should_resolve as ural_should_resolve,
+from urllib.parse import urlparse
+
+from ural import get_domain_name as ural_get_domain_name
+from ural import get_hostname as ural_get_hostname
+from ural import get_normalized_hostname as ural_get_normalized_hostname
+from ural import is_url
+from ural import normalize_url as ural_normalize_url
+from ural import should_resolve as ural_should_resolve
+from ural.facebook import (
+    FacebookGroup,
+    is_facebook_url,
+    parse_facebook_url
 )
-from ural.twitter import(
-    is_twitter_url,
+from ural.twitter import (
     extract_screen_name_from_twitter_url,
+    is_twitter_url,
     normalize_screen_name
 )
-from ural.youtube import(
+from ural.youtube import (
+    YoutubeChannel,
     is_youtube_url,
-    parse_youtube_url,
-    YoutubeChannel
-)
-from ural.facebook import(
-    is_facebook_url,
-    parse_facebook_url,
-    FacebookGroup,
+    parse_youtube_url
 )
 from log import Issue
 from resolve_url import resolve
-from urllib.parse import urlparse
 from youtube import (
-    scrape_channel_id,
-    construct_channel_url
+    construct_channel_url,
+    scrape_channel_id
 )
 
 
@@ -60,6 +59,7 @@ class Link:
         self.input = input_url
         self.needs_resolution = needs_resolution
         self.normalized_url = None
+        self.count = 0
         self.domain = None
         self.subdomain = None
         self.host = None

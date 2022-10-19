@@ -1,17 +1,18 @@
+from collections import Counter
+
+from tqdm.auto import tqdm
+
+from log import LogInvalidURL
+from output import Output
 from parse_data_file import parse_data_file
 from parse_url import (
     Link,
     verify_link
 )
-from log import (
-    LogInvalidURL,
-)
-from output import Output
-from tqdm.auto import tqdm
 
 
 def context_manager(filepath, count, output_path, log_path):
-    internal_log = []
+    internal_log = Counter({})
 
     with open(output_path, "w") as output_file, open(log_path, "w") as log_file:
 
@@ -55,19 +56,17 @@ def context_manager(filepath, count, output_path, log_path):
             # ------------------------------------ #
             link = Link(url, issue.needs_resolved)
 
-            # ------------------------------------ #
-            # Filter out URLs already processed
-            # ------------------------------------ #
-            if link.normalized_url not in internal_log:
-                
-                # ------------------------------------ #
-                # Output all URL data
-                # ------------------------------------ #
-                link.data()
-                output.update(link)
+            if link.normalized_url:
 
-                # ------------------------------------ #
-                # Update the internal log with
-                # the newly processed unique URL
-                # ------------------------------------ #
-                internal_log.append(link.normalized_url)
+            # ------------------------------------ #
+            # Update the internal log
+            # ------------------------------------ #
+                internal_log.update([link.normalized_url])
+                link.count = internal_log[link.normalized_url]
+
+            # ------------------------------------ #
+            # Update output only with new links
+            # ------------------------------------ #
+                if link.count == 1:
+                    link.data()
+                    output.update(link)
