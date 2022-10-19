@@ -69,4 +69,8 @@ def context_manager(filepath, count, output_path, log_path):
             # ------------------------------------ #
                 if link.count == 1:
                     link.data()
+                    output.new_entry(link)
+                else:
                     output.update(link)
+
+        output.write()
