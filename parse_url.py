@@ -24,6 +24,10 @@ from ural.facebook import(
 from log import Issue
 from resolve_url import resolve
 from urllib.parse import urlparse
+from youtube import (
+    scrape_channel_id,
+    construct_channel_url
+)
 
 
 # -----------------------------------
@@ -63,6 +67,7 @@ class Link:
         self.twitter_user = None
         self.youtube_channel_name = None
         self.youtube_channel_id = None
+        self.youtube_channel_link = None
         self.facebook_group_name = None
         self.facebook_group_id = None
 
@@ -90,8 +95,12 @@ class Link:
         if is_youtube_url(self.input):
             parsed_url = parse_youtube_url(self.input)
             if parsed_url and isinstance(parsed_url, YoutubeChannel):
+                self.youtube_channel_link = self.normalized_url
                 self.youtube_channel_id = parsed_url.id
-                self.youtube_channel_name = parsed_url.name                
+                self.youtube_channel_name = parsed_url.name
+            else:
+                self.youtube_channel_id = scrape_channel_id(self.input)
+                self.youtube_channel_link = construct_channel_url(self.youtube_channel_id)
         
         if is_facebook_url(self.input):
             parsed_url = parse_facebook_url(self.input)

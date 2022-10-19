@@ -8,7 +8,6 @@ from log import (
 )
 from output import Output
 from tqdm.auto import tqdm
-from resolve_url import resolve
 
 
 def context_manager(filepath, count, output_path, log_path):
