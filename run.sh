@@ -46,6 +46,7 @@ DATA=""
 OUTPUT=""
 LOG=""
 LENGTH="0"
+TEMPFILE="links_only.csv"
 
 # ---------------------------------------------
 #                  COUNT CSV
@@ -55,15 +56,18 @@ Count()
     if [[ $DATA == *.gz ]]
     then
         if [[ $(uname -s) == "Darwin" ]];
-        then 
-            LENGTH=`gzcat $DATA | xsv count`
+        then
+            $(gzcat $DATA | xsv explode 'links' '|' | xsv search -s 'links' '.' | xsv select 'links' > $TEMPFILE)
         else
-            LENGTH=`zcat $DATA | xsv count`
+            $(zcat $DATA | xsv explode 'links' '|' | xsv search -s 'links' '.' | xsv select 'links' > $TEMPFILE)
         fi
+
+        LENGTH=$(xsv count $TEMPFILE)
 
     elif [[ $DATA == *.csv ]]
     then
-        LENGTH=`xsv count $DATA`
+        TEMPFILE=$DATA
+        LENGTH=$(xsv count $DATA)
 
     fi
 }
@@ -120,4 +124,8 @@ else
     LOG_OPTION=""
 fi
 
-`python main.py $DATA --count ${LENGTH}${OUTPUT_OPTION}${LOG_OPTION}`
+echo
+echo "The command will be:"
+echo "python main.py $TEMPFILE --count ${LENGTH}${OUTPUT_OPTION}${LOG_OPTION}"
+echo
+`python main.py $TEMPFILE --count ${LENGTH}${OUTPUT_OPTION}${LOG_OPTION}`
