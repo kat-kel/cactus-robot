@@ -108,16 +108,16 @@ done
 
 if [ $OUTPUT ]
 then
-    OUTPUT_OPTION="--output $OUTPUT"
+    OUTPUT_OPTION=" --output $OUTPUT"
 else
     OUTPUT_OPTION=""
 fi
 
 if [ "$LOG" ]
 then
-    LOG_OPTION="--log $LOG"
+    LOG_OPTION=" --log $LOG"
 else
     LOG_OPTION=""
 fi
 
-`python main.py $DATA --count $LENGTH $OUTPUT_OPTION $LOG_OPTION`
+`python main.py $DATA --count ${LENGTH}${OUTPUT_OPTION}${LOG_OPTION}`
