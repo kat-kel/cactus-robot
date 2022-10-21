@@ -5,29 +5,23 @@ FIELDNAMES = ["input", "count", "normalized url", "domain", "subdomain", "host n
 class Output:
     def __init__(self, writer):
         self.writer = csv.DictWriter(writer, fieldnames=FIELDNAMES)
-        self.data = {}
     
-    def new_entry(self, url):
-        self.data[url.normalized_url] = \
+    def write_row(self, link):
+        self.writer.writerow(
         {
-            "input":url.input,
-            "count":url.count,
-            "normalized url":url.normalized_url,
-            "domain":url.domain,
-            "subdomain":url.subdomain,
-            "host name":url.host,
-            "normalized host name":url.normalized_host,
-            "twitter user":url.twitter_user,
-            "youtube channel name":url.youtube_channel_name,
-            "youtube channel id":url.youtube_channel_id,
-            "youtube channel link":url.youtube_channel_link,
-            "facebook group name":url.facebook_group_name,
-            "facebook group id":url.facebook_group_id
+            "input":link.input,
+            "count":link.count,
+            "normalized url":link.normalized_url,
+            "domain":link.domain,
+            "subdomain":link.subdomain,
+            "host name":link.host,
+            "normalized host name":link.normalized_host,
+            "twitter user":link.twitter_user,
+            "youtube channel name":link.youtube_channel_name,
+            "youtube channel id":link.youtube_channel_id,
+            "youtube channel link":link.youtube_channel_link,
+            "facebook group name":link.facebook_group_name,
+            "facebook group id":link.facebook_group_id
         }
-    
-    def update(self, url):
-        self.data[url.normalized_url]["count"] = url.count
-    
-    def write(self):
-        self.writer.writerows([link[1] for link in self.data.items()])
+        )
         

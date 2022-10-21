@@ -2,8 +2,8 @@ from collections import Counter
 
 from tqdm.auto import tqdm
 
+from cache import Cache
 from log import LogInvalidURL
-from output import Output
 from parse_data_file import parse_data_file
 from parse_url import (
     Link,
@@ -11,10 +11,11 @@ from parse_url import (
 )
 
 
-def context_manager(filepath, count, output_path, log_path):
-    internal_log = Counter({})
+def normalize_urls(filepath, cache_path, count, log_path):
+    count_url_occurence = Counter({})
+    count_urls_cached = Counter({})
 
-    with open(output_path, "w") as output_file, open(log_path, "w") as log_file:
+    with open(log_path, "w") as log_file, open(cache_path, "w") as cache_file:
 
         # ------------------------------------ #
         # Create the error log CSV
@@ -23,16 +24,16 @@ def context_manager(filepath, count, output_path, log_path):
         error_log.writer.writeheader()
 
         # ------------------------------------ #
-        # Create the output CSV
+        # Create cache file
         # ------------------------------------ #
-        output = Output(output_file)
-        output.writer.writeheader()
+        cache = Cache(cache_file)
+        cache.writer.writeheader()
 
         # ------------------------------------ #
         # Adjust for a progress bar
         # ------------------------------------ #
         if count:
-            reader = tqdm(parse_data_file(filepath), total=int(count), desc="Progress Bar", dynamic_ncols=True)
+            reader = tqdm(parse_data_file(filepath), total=int(count), desc="Normalizing URLs", dynamic_ncols=True)
         else:
             reader = parse_data_file(filepath)
 
@@ -52,7 +53,7 @@ def context_manager(filepath, count, output_path, log_path):
                 continue
             
             # ------------------------------------ #
-            # Resolve URL if needed
+            # Reset normalized URL to resolved URL if needed
             # ------------------------------------ #
             link = Link(url, issue.needs_resolved)
 
@@ -61,16 +62,17 @@ def context_manager(filepath, count, output_path, log_path):
             # ------------------------------------ #
             # Update the internal log
             # ------------------------------------ #
-                internal_log.update([link.normalized_url])
-                link.count = internal_log[link.normalized_url]
+                count_url_occurence.update([link.normalized_url])
+                link.count = count_url_occurence[link.normalized_url]
 
             # ------------------------------------ #
-            # Update output only with new links
+            # Cache the input URL, the normalized version, and its count
             # ------------------------------------ #
                 if link.count == 1:
-                    link.data()
-                    output.new_entry(link)
+                    cache.new_entry(link)
+                    count_urls_cached.update([link.normalized_url])
                 else:
-                    output.update(link)
+                    cache.update(link)
+        cache.write()
 
-        output.write()
+    return count_urls_cached.total()

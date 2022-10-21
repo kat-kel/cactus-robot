@@ -32,3 +32,10 @@ def parse_data_file(filepath):
     
     else:
         raise FileTypeError(filepath)
+
+
+def generator(filepath):
+    with open(filepath, "r") as f:
+        reader = csv.DictReader(f)
+        yield from reader
+        

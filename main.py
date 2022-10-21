@@ -1,17 +1,19 @@
 import click
 import os
 
+from analyze_urls import analyze_urls
+from config import (
+    DEFAULT_LOG_FILE,
+    DEFAULT_OUTPUT_FILE,
+    CACHE_FILE
+)
 from exceptions import (
     DataFileNotFound
 )
 from log import (
     recreate_log_file,
 )
-from context_manager import context_manager
-from config import (
-    DEFAULT_LOG_FILE,
-    DEFAULT_OUTPUT_FILE
-)
+from normalize_urls import normalize_urls
 
 @click.command
 @click.argument("filepath")
@@ -32,8 +34,9 @@ def main(filepath, count, output, log):
     # Manage the parsing, error logging, and output of links in the input file
     # ------------------------------------ #
     else:
-        context_manager(filepath, count, output, log)
-
+        cache_length = normalize_urls(filepath, CACHE_FILE, count, log)
+        analyze_urls(CACHE_FILE, output, cache_length)
+        
 
 if __name__ == "__main__":
     main()
