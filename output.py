@@ -5,7 +5,7 @@ FIELDNAMES = ["input", "count", "normalized url", "domain", "subdomain", "host n
 class Output:
     def __init__(self, writer):
         self.writer = csv.DictWriter(writer, fieldnames=FIELDNAMES)
-    
+
     def write_row(self, link):
         self.writer.writerow(
         {
@@ -24,4 +24,3 @@ class Output:
             "facebook group id":link.facebook_group_id
         }
         )
-        

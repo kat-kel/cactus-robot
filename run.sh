@@ -69,7 +69,7 @@ OperatingSystem()
             COMPRESS="gzip"
         else
             DECOMPRESS="zcat"
-            COMPRESS="gzip"
+            COMPRESS="gzip" # not sure if this works
     fi
 }
 
@@ -84,32 +84,34 @@ Count()
         echo -e "${green}    Finished.${reset}"
 
         echo
-        echo -e "${yellow}(step 2/3) Exploding into separate rows links listed together in one row --> ${TEMPFILE2}${reset}"
+        echo -e "${yellow}(step 2/3) Exploding into separate rows the links that are listed together in one row --> ${TEMPFILE2}${reset}"
         $($DECOMPRESS $TEMPFILE1 | $EXPLODE_COLUMN "links" "|" | $COMPRESS > $TEMPFILE2)
+        $(rm $TEMPFILE1)
         echo -e "${green}    Finished.${reset}"
 
         echo
         echo -e "${yellow}(step 3/3) Filtering out empty rows --> ${TEMPFILE3}${reset}"
         $($DECOMPRESS $TEMPFILE2 | $SEARCH_COLUMN "links" "." | $COMPRESS > $TEMPFILE3)
+        $(rm $TEMPFILE2)
         echo -e "${green}    Finished.${reset}"
-        
 
         LENGTH=$($DECOMPRESS $TEMPFILE3 | xsv count)
+
+        return
 
     elif [[ $DATA == *.csv ]]
     then
         TEMPFILE3=$DATA
         LENGTH=$(xsv count $TEMPFILE3)
 
-    fi
-}
+        return
 
-PrepareData()
-{
-    echo
-    echo "------- Preparing Gazoulloire data set for processing -------"
-    OperatingSystem
-    Count
+    else
+        echo
+        echo -e "${red}File not valid.${reset}"
+        exit
+
+    fi
 }
 
 # ---------------------------------------------
@@ -166,9 +168,13 @@ else
 fi
 
 # Prepare data for processing
-PrepareData
+echo
+echo "------- Preparing Gazoulloire data set for processing -------"
+OperatingSystem
+Count
 
 # Launch the Python script with command-line arguments
 echo
 echo "------- Processing data -------"
+echo
 python main.py $TEMPFILE3 --count ${LENGTH}${OUTPUT_OPTION}${LOG_OPTION}

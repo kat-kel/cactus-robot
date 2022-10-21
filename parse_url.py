@@ -37,13 +37,13 @@ def verify_link(url):
 
     # Check that the URL input is a URL
     if not is_url(url): issue.error_message("is not URL")
-    
+
     # Check if the URL needs resolved
     elif ural_should_resolve(url):
 
         # Log an error message that the URL will not be resolved
         if not is_youtube_url(url): issue.error_message("not resolved")
-        
+
         # If the URL is from Youtube, note that it should be resolved
         else: issue.unresolved()
 
@@ -77,7 +77,7 @@ class Link:
         else:
             self.normalized_url = ural_normalize_url(self.input)
 
-    
+
     def data(self):
         self.domain = ural_get_domain_name(self.input)
 
@@ -101,13 +101,13 @@ class Link:
             else:
                 self.youtube_channel_id = scrape_channel_id(self.input)
                 self.youtube_channel_link = construct_channel_url(self.youtube_channel_id)
-        
+
         if is_facebook_url(self.input):
             parsed_url = parse_facebook_url(self.input)
             if parsed_url and isinstance(parsed_url, FacebookGroup):
                 self.facebook_group_id = parsed_url.id
                 self.facebook_group_name = parsed_url.handle
-    
+
     def get_subdomain(self):
         hostname = urlparse(self.input).hostname
         subdomain = hostname.split(".")[0]
