@@ -8,7 +8,7 @@ class DataFileNotFound(Exception):
     def __init__(self, filepath=None, *args):
         super().__init__(args)
         self.fp = filepath
-    
+
     def __str__(self) -> str:
         return f"{yellow}The data was not found at{end} {red}{self.fp}{end}{yellow}. Please enter the path to a CSV file.{end}"
 
@@ -18,7 +18,7 @@ class FileTypeError(Exception):
         super().__init__(args)
         self.fp = filepath
         self.ext = filepath.split(".")[-1]
-    
+
     def __str__(self) -> str:
         return f"{yellow}The file {end}{red}{self.fp}{end}{yellow} is not a valid file type due to its extension {end}{red}{self.ext}{end}{yellow}. The data file must be a CSV or a CSV file zippped with gzip.{end}"
 

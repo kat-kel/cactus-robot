@@ -36,7 +36,7 @@ def main(filepath, count, output, log):
     else:
         cache_length = normalize_urls(filepath, CACHE_FILE, count, log)
         analyze_urls(CACHE_FILE, output, cache_length)
-        
+
 
 if __name__ == "__main__":
     main()

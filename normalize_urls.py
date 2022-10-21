@@ -51,7 +51,7 @@ def normalize_urls(filepath, cache_path, count, log_path):
             if issue.message:
                 error_log.log_error(url, issue.message)
                 continue
-            
+
             # ------------------------------------ #
             # Reset normalized URL to resolved URL if needed
             # ------------------------------------ #
