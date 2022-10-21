@@ -171,8 +171,4 @@ PrepareData
 # Launch the Python script with command-line arguments
 echo
 echo "------- Processing data -------"
-echo
-echo "The command will be:"
-#`python main.py $TEMPFILE3 --count ${LENGTH}${OUTPUT_OPTION}${LOG_OPTION}`
-echo -e "${inverted}python main.py $TEMPFILE3 --count ${LENGTH}${OUTPUT_OPTION}${LOG_OPTION}${reset}"
-echo "..."
+python main.py $TEMPFILE3 --count ${LENGTH}${OUTPUT_OPTION}${LOG_OPTION}
