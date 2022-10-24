@@ -3,30 +3,30 @@ from urllib.parse import urlparse
 from ural import get_domain_name as ural_get_domain_name
 from ural import get_hostname as ural_get_hostname
 from ural import get_normalized_hostname as ural_get_normalized_hostname
-from ural import is_url
+from ural import is_url as ural_is_url
 from ural import normalize_url as ural_normalize_url
 from ural import should_resolve as ural_should_resolve
 from ural.facebook import (
     FacebookGroup,
-    is_facebook_url,
-    parse_facebook_url
+    is_facebook_url as ural_is_facebook_url,
+    parse_facebook_url as ural_parse_facebook_url
 )
 from ural.twitter import (
-    extract_screen_name_from_twitter_url,
-    is_twitter_url,
-    normalize_screen_name
+    extract_screen_name_from_twitter_url as ural_extract_screen_name_from_twitter_url,
+    is_twitter_url as ural_is_twitter_url,
+    normalize_screen_name as ural_normalize_screen_name
 )
 from ural.youtube import (
     YoutubeChannel,
-    is_youtube_url,
-    parse_youtube_url
+    YoutubeVideo,
+    is_youtube_url as ural_is_youtube_url,
+    parse_youtube_url as ural_parse_youtube_url
 )
 from log import Issue
 from resolve_url import resolve
-from youtube import (
-    construct_channel_url,
-    scrape_channel_id
-)
+from youtube import construct_channel_url, catch_bad_channel_path
+from minet.youtube.scrapers import scrape_channel_id as minet_scrape_channel_id
+from facebook import contains_id
 
 
 # -----------------------------------
@@ -36,13 +36,13 @@ def verify_link(url):
     issue = Issue()
 
     # Check that the URL input is a URL
-    if not is_url(url): issue.error_message("is not URL")
+    if not ural_is_url(url): issue.error_message("is not URL")
 
     # Check if the URL needs resolved
     elif ural_should_resolve(url):
 
         # Log an error message that the URL will not be resolved
-        if not is_youtube_url(url): issue.error_message("not resolved")
+        if not ural_is_youtube_url(url): issue.error_message("not resolved")
 
         # If the URL is from Youtube, note that it should be resolved
         else: issue.unresolved()
@@ -87,29 +87,37 @@ class Link:
 
         self.normalized_host = ural_get_normalized_hostname(self.input)
 
-        if is_twitter_url(self.input):
-            screen_name = extract_screen_name_from_twitter_url(self.input)
+        if ural_is_twitter_url(self.input):
+            screen_name = ural_extract_screen_name_from_twitter_url(self.input)
             if screen_name:
-                self.twitter_user = normalize_screen_name(screen_name)
+                self.twitter_user = ural_normalize_screen_name(screen_name)
 
-        if is_youtube_url(self.input):
-            parsed_url = parse_youtube_url(self.input)
-            if parsed_url and isinstance(parsed_url, YoutubeChannel):
-                self.youtube_channel_link = self.normalized_url
-                self.youtube_channel_id = parsed_url.id
-                self.youtube_channel_name = parsed_url.name
-            else:
-                self.youtube_channel_id = scrape_channel_id(self.input)
-                self.youtube_channel_link = construct_channel_url(self.youtube_channel_id)
-
-        if is_facebook_url(self.input):
-            parsed_url = parse_facebook_url(self.input)
-            if parsed_url and isinstance(parsed_url, FacebookGroup):
-                self.facebook_group_id = parsed_url.id
-                self.facebook_group_name = parsed_url.handle
+        if ural_is_youtube_url(self.input):
+            if not catch_bad_channel_path(self.input):
+                parsed_url = ural_parse_youtube_url(self.normalized_url)
+                if parsed_url:
+                    if isinstance(parsed_url, YoutubeChannel):
+                        self.youtube_channel_id = parsed_url.id
+                        self.youtube_channel_name = parsed_url.name
+                    if isinstance(parsed_url, YoutubeVideo):
+                        url = "https://"+self.normalized_url
+                        self.youtube_channel_id = minet_scrape_channel_id(url)
+                if self.youtube_channel_id:
+                    self.youtube_channel_link = construct_channel_url(self.youtube_channel_id)
+                
+        if ural_is_facebook_url(self.input):
+            # contains_id() is a little fix for the moment, should be repaired later with an update to Minet.
+            # It responds to a problem with constructing the class FacebookPost when the parsed url doesn't give a parent ID.
+            # The function parse_facebook_url() will try to return an instance of the class FacebookPost if it determines the URL to be from a post.
+            if contains_id(self.normalized_url):
+                parsed_url = ural_parse_facebook_url(self.input)
+                if parsed_url and isinstance(parsed_url, FacebookGroup):
+                    self.facebook_group_id = parsed_url.id
+                    self.facebook_group_name = parsed_url.handle
 
     def get_subdomain(self):
         hostname = urlparse(self.input).hostname
         subdomain = hostname.split(".")[0]
-        if subdomain and subdomain != "www" and subdomain != self.domain.split(".")[0]:
-            return subdomain
+        if self.domain:
+            if subdomain and subdomain != "www" and subdomain != self.domain.split(".")[0]:
+                return subdomain
