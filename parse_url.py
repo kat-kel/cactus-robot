@@ -101,7 +101,10 @@ class Link:
                         self.youtube_channel_name = parsed_url.name
                     if isinstance(parsed_url, YoutubeVideo):
                         url = "https://"+self.normalized_url
-                        self.youtube_channel_id = minet_scrape_channel_id(url)
+                        try:
+                            self.youtube_channel_id = minet_scrape_channel_id(url)
+                        except:
+                            pass
                 if self.youtube_channel_id:
                     self.youtube_channel_link = construct_channel_url(self.youtube_channel_id)
                 
