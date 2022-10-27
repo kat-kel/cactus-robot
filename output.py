@@ -1,6 +1,6 @@
 import csv
 
-FIELDNAMES = ["input", "count", "normalized url", "domain", "subdomain", "host name", "normalized host name", "twitter user", "youtube channel name", "youtube channel id", "youtube channel link", "facebook group name", "facebook group id"]
+FIELDNAMES = ["input", "count", "normalized url", "domain", "subdomain", "complete subdomain", "host name", "normalized host name", "twitter user", "youtube channel name", "youtube channel id", "youtube channel link", "facebook group name", "facebook group id"]
 
 class Output:
     def __init__(self, writer):
@@ -14,6 +14,7 @@ class Output:
             "normalized url":link.normalized_url,
             "domain":link.domain,
             "subdomain":link.subdomain,
+            "complete subdomain":link.complete_subdomain,
             "host name":link.host,
             "normalized host name":link.normalized_host,
             "twitter user":link.twitter_user,

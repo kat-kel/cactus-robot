@@ -62,6 +62,7 @@ class Link:
         self.count = 0
         self.domain = None
         self.subdomain = None
+        self.complete_subdomain = None
         self.host = None
         self.normalized_host = None
         self.twitter_user = None
@@ -77,11 +78,12 @@ class Link:
         else:
             self.normalized_url = ural_normalize_url(self.input)
 
-
     def data(self):
         self.domain = ural_get_domain_name(self.normalized_url)
 
         self.subdomain = self.get_subdomain()
+
+        self.complete_subdomain = self.clean_subdomain()
 
         self.host = ural_get_hostname(self.normalized_url)
 
@@ -124,3 +126,9 @@ class Link:
         if self.domain:
             if subdomain and subdomain != "www" and subdomain != self.domain.split(".")[0]:
                 return subdomain
+
+    def clean_subdomain(self):
+        if self.subdomain:
+            return self.subdomain+self.domain
+        elif self.domain:
+            return self.domain
