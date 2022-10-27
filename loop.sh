@@ -40,9 +40,9 @@ for FILE in $DIR*.gz; do
     FILENAME=${short_array[0]}
 
     # Set the names of the output files
-    OUTPUT="${DIR}${FILENAME}_output.csv"
-    LOG="${DIR}${FILENAME}_log.csv"
+    OUTPUT="${FILENAME}_output.csv"
+    LOG="${FILENAME}_log.csv"
 
-    bash run.sh $FILE -o $OUTPUT -l $LOG
+    ./run.sh $FILE -o $OUTPUT -l $LOG
 
 done

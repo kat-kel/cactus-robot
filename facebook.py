@@ -5,6 +5,8 @@
 def contains_id(url):
     if '/permalink.php' in url and '&id=' in url \
         or '/story.php' in url and '&id=' in url \
-        or '/posts/' in url or '/permalink/' in url:
+        or '/posts/' in url \
+        or '/permalink/' in url \
+        or '/groups/' in url:
         return True
    

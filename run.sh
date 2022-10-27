@@ -41,6 +41,8 @@ Help()
 #                  VARIABLES
 # ---------------------------------------------
 
+mkdir -p data
+
 # Set variables
 DATA=""
 OUTPUT=""
@@ -75,31 +77,30 @@ OperatingSystem()
 
 Count()
 {
-    if [[ $DATA == *.gz ]]
-    then
+    if [[ "$DATA" == *.gz ]]; then
 
         echo
         echo -e "${yellow}(step 1/3) Extracting 'links' column from zipped file --> ${TEMPFILE1}${reset}"
-        $($DECOMPRESS $DATA | $SELECT_COLUMN "links" | $COMPRESS > $TEMPFILE1)
+        $DECOMPRESS $DATA | $SELECT_COLUMN "links" | $COMPRESS > $TEMPFILE1
         echo -e "${green}    Finished.${reset}"
 
         echo
         echo -e "${yellow}(step 2/3) Exploding into separate rows the links that are listed together in one row --> ${TEMPFILE2}${reset}"
-        $($DECOMPRESS $TEMPFILE1 | $EXPLODE_COLUMN "links" "|" | $COMPRESS > $TEMPFILE2)
-        $(rm $TEMPFILE1)
+        $DECOMPRESS $TEMPFILE1 | $EXPLODE_COLUMN "links" "|" | $COMPRESS > $TEMPFILE2
+        rm $TEMPFILE1
         echo -e "${green}    Finished.${reset}"
 
         echo
         echo -e "${yellow}(step 3/3) Filtering out empty rows --> ${TEMPFILE3}${reset}"
-        $($DECOMPRESS $TEMPFILE2 | $SEARCH_COLUMN "links" "." | $COMPRESS > $TEMPFILE3)
-        $(rm $TEMPFILE2)
+        $DECOMPRESS $TEMPFILE2 | $SEARCH_COLUMN "links" "." | $COMPRESS > $TEMPFILE3
+        rm $TEMPFILE2
         echo -e "${green}    Finished.${reset}"
 
         LENGTH=$($DECOMPRESS $TEMPFILE3 | xsv count)
 
         return
 
-    elif [[ $DATA == *.csv ]]
+    elif [[ "$DATA" == *.csv ]]
     then
         TEMPFILE3=$DATA
         LENGTH=$(xsv count $TEMPFILE3)
@@ -153,16 +154,16 @@ do
 done
 
 # Prepare arguments to be passed to command line
-if [ $OUTPUT ]
+if ! [ -z "$OUTPUT" ]
 then
-    OUTPUT_OPTION=" --output $OUTPUT"
+    OUTPUT_OPTION=" --output data/${OUTPUT}"
 else
     OUTPUT_OPTION=""
 fi
 
-if [ "$LOG" ]
+if ! [ -z "$LOG" ]
 then
-    LOG_OPTION=" --log $LOG"
+    LOG_OPTION=" --log data/${LOG}"
 else
     LOG_OPTION=""
 fi
@@ -178,3 +179,10 @@ echo
 echo "------- Processing data -------"
 echo
 python main.py $TEMPFILE3 --count ${LENGTH}${OUTPUT_OPTION}${LOG_OPTION}
+
+# Clean up
+if [ "$?" -eq 0 ]; then rm $TEMPFILE3
+fi
+echo
+echo -e "${green}Program finished processing data file ${DATA}.\nTemporary files successfully deleted.${reset}"
+echo

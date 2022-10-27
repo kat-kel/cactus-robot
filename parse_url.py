@@ -89,13 +89,13 @@ class Link:
 
         self.normalized_host = ural_get_normalized_hostname(self.normalized_url)
 
-        if ural_is_twitter_url(self.input):
-            screen_name = ural_extract_screen_name_from_twitter_url(self.input)
+        if ural_is_twitter_url(self.normalized_url):
+            screen_name = ural_extract_screen_name_from_twitter_url(self.normalized_url)
             if screen_name:
                 self.twitter_user = ural_normalize_screen_name(screen_name)
 
-        if ural_is_youtube_url(self.input):
-            if not catch_bad_channel_path(self.input):
+        if ural_is_youtube_url(self.normalized_url):
+            if not catch_bad_channel_path(self.normalized_url):
                 parsed_url = ural_parse_youtube_url(self.normalized_url)
                 if parsed_url:
                     if isinstance(parsed_url, YoutubeChannel):
@@ -110,18 +110,19 @@ class Link:
                 if self.youtube_channel_id:
                     self.youtube_channel_link = construct_channel_url(self.youtube_channel_id)
                 
-        if ural_is_facebook_url(self.input):
+        if ural_is_facebook_url(self.normalized_url):
             # contains_id() is a little fix for the moment, should be repaired later with an update to Minet.
             # It responds to a problem with constructing the class FacebookPost when the parsed url doesn't give a parent ID.
             # The function parse_facebook_url() will try to return an instance of the class FacebookPost if it determines the URL to be from a post.
             if contains_id(self.normalized_url):
-                parsed_url = ural_parse_facebook_url(self.input)
+                parsed_url = ural_parse_facebook_url(self.normalized_url)
                 if parsed_url and isinstance(parsed_url, FacebookGroup):
                     self.facebook_group_id = parsed_url.id
                     self.facebook_group_name = parsed_url.handle
 
     def get_subdomain(self):
-        hostname = urlparse(self.input).hostname
+        url = "https://"+self.normalized_url
+        hostname = urlparse(url).hostname
         subdomain = hostname.split(".")[0]
         if self.domain:
             if subdomain and subdomain != "www" and subdomain != self.domain.split(".")[0]:
