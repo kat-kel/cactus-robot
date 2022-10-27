@@ -29,15 +29,17 @@ fi
 
 for FILE in $DIR*.gz; do
     # Get the last part of the file name
-    IFS="/"
-    long_array=($FILE)
-    unset IFS;
-    FULL_FILENAME=${long_array[1]}
+    #IFS=
+    #long_array=($FILE)
+    #unset IFS;
+    #FULL_FILENAME=${long_array[1]}
 
-    IFS="."
-    short_array=($FULL_FILENAME)
-    unset IFS;
-    FILENAME=${short_array[0]}
+    BASE_FILENAME=$(basename -- "$FILE")
+    EXTENSION="${BASE_FILENAME##*.}"
+    FILENAME="${BASE_FILENAME%.*}"
+
+    EXTENSION="${FILENAME##*.}"
+    FILENAME="${FILENAME%.*}"
 
     # Set the names of the output files
     OUTPUT="${FILENAME}_output.csv"
