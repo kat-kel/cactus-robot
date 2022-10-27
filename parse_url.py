@@ -79,13 +79,13 @@ class Link:
 
 
     def data(self):
-        self.domain = ural_get_domain_name(self.input)
+        self.domain = ural_get_domain_name(self.normalized_url)
 
         self.subdomain = self.get_subdomain()
 
-        self.host = ural_get_hostname(self.input)
+        self.host = ural_get_hostname(self.normalized_url)
 
-        self.normalized_host = ural_get_normalized_hostname(self.input)
+        self.normalized_host = ural_get_normalized_hostname(self.normalized_url)
 
         if ural_is_twitter_url(self.input):
             screen_name = ural_extract_screen_name_from_twitter_url(self.input)
