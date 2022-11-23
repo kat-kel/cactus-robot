@@ -11,178 +11,174 @@ red="\033[31m"
 green="\033[32m"
 yellow="\033[33m"
 
-
 # ---------------------------------------------
 #                  HELP
 # ---------------------------------------------
 Help()
 {
-    # Display help
     echo
-    echo "This program will download a CSV file of tweets gathered with gazouilloire, "
-    echo "clean and analyze links published in those tweets, and output the results of"
-    echo "that analysis in a CSV file."
+    echo "This program parses collections of URLs in the format of Twitter API's export"
+    echo "and/or Gazouilloire, a collecting tool from Science Po's médialab. It extracts"
+    echo "URLs from the collection and yields a CSV file with metadata about valid links."
     echo
-    echo "Syntax: run.sh f [-h|-o|-l]"
+    echo "Twitter and Gazouilloire store URLs in the column 'links' and this program will"
+    echo "search that column by default. But if you want to execute the analysis on a dataset"
+    echo "with URLs stored under a different column, you can declare it with the option -s."
     echo
-    echo "positional argument:"
-    echo "f     path to the data file"
+    echo "Syntax: run.sh [-f|-s|-o|-l|-h]"
+    echo
     echo
     echo "options:"
-    echo "h     print this help"
+    echo "f     path to the data file or directory"
+    echo "s     name of the column with the URLs to be analyzed"
     echo "o     path to the file in which the results will be sent"
     echo "l     path to file in which any errors will be logged"
+    echo "h     print this help"
     echo
     exit
 }
 
-
 # ---------------------------------------------
-#                  VARIABLES
+#         PRE-PROCESS & COUNT DATA
 # ---------------------------------------------
 
-mkdir -p data
+TEMPFILE1="temp/temp_links-only.csv"
+TEMPFILE2="temp/temp_exploded-links.csv"
 
-# Set variables
-DATA=""
-OUTPUT=""
-LOG=""
-LENGTH="0"
+XSV_SELECT="xsv select"
+XSV_EXPLODE="xsv explode"
+XSV_SEARCH="xsv search"
 
-# Temp files
-TEMPFILE1="data/tempfile1.csv.gz"
-TEMPFILE2="data/tempfile2.csv.gz"
-TEMPFILE3="data/tempfile3.csv.gz"
-
-# XSV commands
-SELECT_COLUMN="xsv select"
-EXPLODE_COLUMN="xsv explode"
-SEARCH_COLUMN="xsv search -s"
-
-
-# ---------------------------------------------
-#                  PREPARE DATA
-# ---------------------------------------------
-OperatingSystem()
+GetBasename() # parameter: file path
 {
-    if [[ $(uname -s) == "Darwin" ]];
+    if [[ $1 == *.csv ]]
+        then
+        BASENAME=$(basename $1 .csv)
+    elif [[ $1 == *.csv.gz ]]
+        then
+        BASENAME=$(basename $1 .csv.gz)
+    fi
+}
+
+Decompresser()
+{
+    if [[ $(uname -s) == "Darwin" ]]
         then
             DECOMPRESS="gzcat"
             COMPRESS="gzip"
         else
             DECOMPRESS="zcat"
-            COMPRESS="gzip" # not sure if this works
+            COMPRESS="gzip"
     fi
 }
 
-Count()
+PreProcess() # parameter: file path
 {
-    if [[ "$DATA" == *.gz ]]; then
+    DATAFILE=$1
+    TEMPFILE3="temp/${BASENAME}_links.csv"
 
-        echo
-        echo -e "${yellow}(step 1/3) Extracting 'links' column from zipped file --> ${TEMPFILE1}${reset}"
-        $DECOMPRESS $DATA | $SELECT_COLUMN "links" | $COMPRESS > $TEMPFILE1
-        echo -e "${green}    Finished.${reset}"
+    if [[ $1 == *.gz ]]
+        then
+            echo -e "${green}XSV is extracting 'links' column in $1.${reset}"
+            $DECOMPRESS $DATAFILE | $XSV_SELECT $COLUMN | $COMPRESS > "${TEMPFILE1}.gz"
 
-        echo
-        echo -e "${yellow}(step 2/3) Exploding into separate rows the links that are listed together in one row --> ${TEMPFILE2}${reset}"
-        $DECOMPRESS $TEMPFILE1 | $EXPLODE_COLUMN "links" "|" | $COMPRESS > $TEMPFILE2
-        rm $TEMPFILE1
-        echo -e "${green}    Finished.${reset}"
+            echo -e "${green}XSV is separating ('exploding') URLs in $TEMPFILE1.${reset}"
+            $DECOMPRESS $TEMPFILE1 | $XSV_EXPLODE $COLUMN "|" | $COMPRESS > "${TEMPFILE2}.gz"
 
-        echo
-        echo -e "${yellow}(step 3/3) Filtering out empty rows --> ${TEMPFILE3}${reset}"
-        $DECOMPRESS $TEMPFILE2 | $SEARCH_COLUMN "links" "." | $COMPRESS > $TEMPFILE3
-        rm $TEMPFILE2
-        echo -e "${green}    Finished.${reset}"
+            echo -e "${green}XSV is removing empty rows in $TEMPFILE2.${reset}"
+            $DECOMPRESS $TEMPFILE2 | $XSV_SEARCH -s $COLUMN "." | $COMPRESS > "${TEMPFILE3}.gz"
 
-        LENGTH=$($DECOMPRESS $TEMPFILE3 | xsv count)
+            COUNT_RESULT=$($DECOMPRESS ${TEMPFILE3}.gz | xsv count)
+            COUNT=" --count $COUNT_RESULT"
 
-        return
-
-    elif [[ "$DATA" == *.csv ]]
-    then
-        TEMPFILE3=$DATA
-        LENGTH=$(xsv count $TEMPFILE3)
-
-        return
+            return
 
     else
-        echo
-        echo -e "${red}File not valid.${reset}"
-        exit
+        echo -e "${green}XSV is extracting 'links' column in $1.${reset}"
+        $XSV_SELECT -o $TEMPFILE1 $COLUMN $DATAFILE
 
+        echo -e "${green}XSV is separating URLs in $TEMPFILE1.${reset}"
+        $XSV_EXPLODE -o $TEMPFILE2 $COLUMN "|" $TEMPFILE1
+
+        echo -e "${green}XSV is removing empty rows in $TEMPFILE2.${reset}"
+        $XSV_SEARCH -s $COLUMN -o $TEMPFILE3 "." $TEMPFILE2
+
+        COUNT_RESULT=$(xsv count $TEMPFILE3)
+        COUNT=" --count $COUNT_RESULT"
+
+        return
     fi
 }
 
 # ---------------------------------------------
-#                  MAIN SCRIPT
+#                MAIN SCRIPT
 # ---------------------------------------------
 
-# Parse first positional argument (the data file)
-if [ $# -gt 0 ] && [ -e $1 ]
-    then
-        DATA=$1
-        shift
-    else
-        echo -e "${red}Error: A valid data file is required as the first argument positioned after run.sh${reset}"
-        echo
-        exit
+mkdir -p data
+mkdir -p temp
 
-fi
-
-# Parse optional arguments (the output file, the log file)
+# ---------------------------------------------
+#   PARSING OPTIONS
+COLUMN="links"
 while [ $# -gt 0 ]
 do
     case "$1" in
+        -f) options="$options $1"
+            DATA="$2"
+            shift
+            ;;
         -h) options="$options $1"
             Help
             ;;
         --help) options="$options $1"
             Help
             ;;
+        -s) options="$options $1"
+            COLUMN="$2"
+            shift
+            ;;
         -o) options="$options $1"
-            OUTPUT="$2"
+            OUTPUT=" --output $2"
             shift
             ;;
         -l) options="$options $1"
-            LOG="$2"
+            LOG=" --log $2"
             shift
             ;;
     esac
     shift
 done
 
-# Prepare arguments to be passed to command line
-if ! [ -z "$OUTPUT" ]
-then
-    OUTPUT_OPTION=" --output data/${OUTPUT}"
+if [[ -z "$DATA" ]]
+    then
+    echo -e "${yellow}Error: A directory or a file must be the first argument positioned after the command.${reset}"
+    exit
+fi
+
+Decompresser
+# ---------------------------------------------
+#   EXECUTING SCRIPT ON FILES IN DIRECTORY
+if [ -d $DATA ]
+    then
+        for FILE in $DATA*.csv.gz; do
+            GetBasename $FILE
+            PreProcess $FILE
+            echo "running python with options:${COUNT}${OUTPUT}${LOG}"
+            python main.py ${FILE}${COUNT}${OUTPUT}${LOG}
+        done
+
+# ---------------------------------------------
+#       EXECUTING SCRIPT ON SINGLE FILE
+elif [ -f $DATA ] && [[ $DATA == *.csv ]] || [[ $DATA == *.csv.gz ]]
+    then
+        GetBasename $DATA
+        PreProcess $DATA
+        echo "running python with options:${COUNT}${OUTPUT}${LOG}"
+        python main.py ${DATA}${COUNT}${OUTPUT}${LOG}
+
+# ---------------------------------------------
+#                  ERROR
 else
-    OUTPUT_OPTION=""
+    echo -e "${yellow}Error: The first argument must be either a directory or a CSV file. Only the '.gz' extension is permitted for compressed CSV files.${reset}"
+    exit
 fi
-
-if ! [ -z "$LOG" ]
-then
-    LOG_OPTION=" --log data/${LOG}"
-else
-    LOG_OPTION=""
-fi
-
-# Prepare data for processing
-echo
-echo "------- Preparing Gazoulloire data set for processing -------"
-OperatingSystem
-Count
-
-# Launch the Python script with command-line arguments
-echo
-echo "------- Processing data -------"
-echo
-python main.py $TEMPFILE3 --count ${LENGTH}${OUTPUT_OPTION}${LOG_OPTION}
-
-# Clean up
-if [ "$?" -eq 0 ]; then rm $TEMPFILE3
-fi
-echo
-echo -e "${green}Program finished processing data file ${DATA}.\nTemporary files successfully deleted.${reset}"
-echo
