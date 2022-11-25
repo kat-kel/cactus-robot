@@ -1,12 +1,45 @@
-# Analyze Links in Twitter
+# Analyze Links in Twitter Data
 
-This program parses URLS in datasets conforming to Twitter API's export and/or [Gazouilloire](https://github.com/medialab/gazouilloire), a collection tool from Science Po's médialab. From a dataset, the program extracts the tweets' IDs and linked URLs. It then yields a CSV file with metadata about valid, active URLS. The program can either (a) accept a zipped or open CSV file directly or (b) a directory containing open or zipped CSV files.
+This program parses URLS in datasets conforming to Twitter API's export and/or [Gazouilloire](https://github.com/medialab/gazouilloire), a long-term tweet collection tool from Science Po's médialab. From a dataset, the program extracts tweets' IDs and linked URLs. It then yields a CSV file with enriched metadata about valid, active URLS.
 
-Twitter and Gazouilloire store tweet IDs in the column 'id' and media links in the column 'links'. By default, the program will search these two columns. If you want to work with a CSV file with different column headers for the ID and URL, use the option -s followed by 2 arguments: the ID header name, the URL column name.
+## Raw Tweet Data
+The incoming data file must have an ID for each tweet and a column containing the URLs linked to the tweet. If a tweet contains multiple URLs (i.e. tweet `1565043914381434881`), they must be separated by a pipe `|`. This is the standard format for Twitter data. Twitter's API returns data already in this format, as does Gazouilloire.
 
-```shell
-$ ./run.sh -f datafile.csv -s custom_ids custom_links
-```
+|id|...|links|
+|-|-|-|
+|1564138363136909312|...||
+|1565043914381434881|...|https://www.radiofrance.fr/franceinter/les-milliardaires-et-les-stars-irrites-par-le-suivi-en-ligne-de-leurs-trajets-aeriens-4327256\|https://twitter.com/franceinter/status/1556286125270093825|
+|1564626931353616386|...|https://l.franceculture.fr/qhT|
+
+## Preprocessing
+
+Using the Rust tool `xsv`, the program preprocesses the data. First, it removes everything but the ID and links columns. Second, it creates a unique row for every link, "exploding" links that might have been concatenated and separated by a pipe (i.e. tweet `1565043914381434881`). Finally, it removes any tweets which do not contain links (i.e. tweet `1564138363136909312`), yielding a cleaned dataset that can be accessed later in the directory `preprocessing/`.
+
+|id|links|
+|-|-|
+|1565043914381434881|https://www.radiofrance.fr/franceinter/les-milliardaires-et-les-stars-irrites-par-le-suivi-en-ligne-de-leurs-trajets-aeriens-4327256|
+|1565043914381434881|https://twitter.com/franceinter/status/1556286125270093825|
+|1564626931353616386|https://l.franceculture.fr/qhT|
+
+## Enriched Links Data
+
+Using its Python scripts, the program then analyzes all the links in the preprocessed dataset and yields an enriched CSV with the following fields:
+
+1. **input** : raw version of the link*
+2. **normalized_url** : normalized version of the link
+3. **count** : number of times the normalized version of the link appeared in the dataset
+4. **tweet_ids** : IDs of tweets that contained the link
+5. **domain** : domain name of the normalized URL
+6. **subdomain** : concatenation of the subdomain and domain name of the normalized URL
+7. **hostname** : hostname of the normalized URL
+8. **normalized_hostname** : normalized hostname of the normalized URL
+9. **twitter_user** : if the link is from Twitter\.com, the Twitter user's handle
+10. **youtube_channel_name** : if the link is from Youtube\.com, the name of the channel / the video's channel
+11. **youtube_channel_id** : if the link is from Youtube\.com, the ID of the channel / the video's channel
+12. **youtube_channel_link** : if the link is from Youtube\.com, a link to the channel / the video's channel
+13. **facebook_group_id** : if the link is from Facebook\.com and a public Facebook group, the group's ID
+
+\* If multiple tweets contain links that are composed differently but are normalized to the same URL, the field `input` only contains the first raw version of the link that it encountered.
 
 # Requirements
 The program requires Python 3.10 (and some libraries) as well as a tool coded in Rust named `xsv`, which is called during the bash script and used to parse the incoming CSV file(s). To install `xsv`, follow the instructions for [the forked version maintained by Sciences Po's médialab](https://github.com/medialab/xsv).
