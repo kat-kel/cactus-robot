@@ -5,7 +5,7 @@ This program parses URLS in datasets conforming to Twitter API's export and/or [
 Twitter and Gazouilloire store tweet IDs in the column 'id' and media links in the column 'links'. By default, the program will search these two columns. If you want to work with a CSV file with different column headers for the ID and URL, use the option -s followed by 2 arguments: the ID header name, the URL column name.
 
 ```shell
-$ ./run.sh -f datafile.csv -s my_ids my_links
+$ ./run.sh -f datafile.csv -s custom_ids custom_links
 ```
 
 # Requirements
@@ -31,7 +31,7 @@ $ cd cactus-robot
 Analyze links in one Twitter or Gazouilloire export. This file can either be open with the extension `.csv` or it can be compressed with the extension `.csv.gz`. The incoming file is never modified, only read.
 
 ```shell
-$ bash run.sh -f FILE.CSV
+$ ./run.sh-f FILE.CSV
 ```
 
 ## Iterate through CSV files in a directory
@@ -39,7 +39,7 @@ $ bash run.sh -f FILE.CSV
 Analyze links in a batch of Twitter or Gazouilloire exports stored inside a directory. The program will only process files in the directory with either `.csv` or `.csv.gz` as the extension. The incoming files are never modified, only read.
 
 ```shell
-$ bash run.sh -f DIRECTORY/
+$ ./run.sh -f DIRECTORY/
 ```
 
 # Options
