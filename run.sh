@@ -17,23 +17,30 @@ yellow="\033[33m"
 Help()
 {
     echo
-    echo "This program parses collections of URLs in the format of Twitter API's export"
-    echo "and/or Gazouilloire, a collecting tool from Science Po's médialab. It extracts"
-    echo "URLs from the collection and yields a CSV file with metadata about valid links."
+    echo "This program parses URLS in datasets conforming to Twitter API's export and/or"
+    echo "Gazouilloire, a collection tool from Science Po's médialab. It extracts URLs"
+    echo "from the collection and yields a CSV file with metadata about valid, active URLs."
+    echo "The program can either (a) accept a zipped or open CSV file directly or (b) a "
+    echo "a directory containing zipped files. (Zipped files must have extension '.gz')"
     echo
-    echo "Twitter and Gazouilloire store URLs in the column 'links' and this program will"
-    echo "search that column by default. But if you want to execute the analysis on a dataset"
-    echo "with URLs stored under a different column, you can declare it with the option -s."
+    echo "Twitter and Gazouilloire store tweet IDs in the column 'id' and media links in the"
+    echo "column 'links'. By default, the program will search these two columns. If you want"
+    echo "to work with a CSV file with different column headers for the ID and URL, use the"
+    echo "option -s followed by 2 arguments: the ID header name, the URL column name."
+    echo
+    echo "Example"
+    echo "./run.sh -f datafile.csv -s my_ids my_links"
     echo
     echo "Syntax: run.sh [-f|-s|-o|-l|-h]"
     echo
     echo
     echo "options:"
-    echo "f     path to the data file or directory"
-    echo "s     name of the column with the URLs to be analyzed"
+    echo "f     path to the data file or directory [required]"
+    echo "s     name of the ID column and URL column"
     echo "o     path to the file in which the results will be sent"
     echo "l     path to file in which any errors will be logged"
     echo "h     print this help"
+    echo
     echo
     exit
 }
@@ -42,8 +49,8 @@ Help()
 #         PRE-PROCESS & COUNT DATA
 # ---------------------------------------------
 
-TEMPFILE1="temp/temp_links-only.csv"
-TEMPFILE2="temp/temp_exploded-links.csv"
+TEMPFILE1="preprocessing/temp_links-only.csv"
+TEMPFILE2="preprocessing/temp_exploded-links.csv"
 
 XSV_SELECT="xsv select"
 XSV_EXPLODE="xsv explode"
@@ -51,62 +58,138 @@ XSV_SEARCH="xsv search"
 
 GetBasename() # parameter: file path
 {
-    if [[ $1 == *.csv ]]
-        then
+    if [[ $1 == *.csv ]]; then
         BASENAME=$(basename $1 .csv)
-    elif [[ $1 == *.csv.gz ]]
-        then
+    elif [[ $1 == *.csv.gz ]]; then
         BASENAME=$(basename $1 .csv.gz)
     fi
 }
 
 Decompresser()
 {
-    if [[ $(uname -s) == "Darwin" ]]
-        then
-            DECOMPRESS="gzcat"
-            COMPRESS="gzip"
-        else
-            DECOMPRESS="zcat"
-            COMPRESS="gzip"
+    if [[ $(uname -s) == "Darwin" ]]; then
+        DECOMPRESS="gzcat"
+        COMPRESS="gzip"
+    else
+        DECOMPRESS="zcat"
+        COMPRESS="gzip"
     fi
 }
 
 PreProcess() # parameter: file path
 {
     DATAFILE=$1
-    TEMPFILE3="temp/${BASENAME}_links.csv"
+    TEMPFILE3="preprocessing/${BASENAME}_id-links.csv"
 
-    if [[ $1 == *.gz ]]
-        then
-            echo -e "${green}XSV is extracting 'links' column in $1.${reset}"
-            $DECOMPRESS $DATAFILE | $XSV_SELECT $COLUMN | $COMPRESS > "${TEMPFILE1}.gz"
+    if [[ ${DATAFILE} == *.gz ]]; then
+        echo -e "${bold}XSV is extracting the columns '${IDCOL}' and '${LINKCOL}' in $DATAFILE.${reset}"
+        $DECOMPRESS $DATAFILE | $XSV_SELECT ${IDCOL},${LINKCOL} | $COMPRESS > "${TEMPFILE1}.gz"
+        XSVErrorEscape
 
-            echo -e "${green}XSV is separating ('exploding') URLs in $TEMPFILE1.${reset}"
-            $DECOMPRESS $TEMPFILE1 | $XSV_EXPLODE $COLUMN "|" | $COMPRESS > "${TEMPFILE2}.gz"
+        echo -e "${bold}XSV is separating ('exploding') URLs in $TEMPFILE1.${reset}"
+        $DECOMPRESS $TEMPFILE1 | $XSV_EXPLODE $LINKCOL "|" | $COMPRESS > "${TEMPFILE2}.gz"
+        XSVErrorEscape
 
-            echo -e "${green}XSV is removing empty rows in $TEMPFILE2.${reset}"
-            $DECOMPRESS $TEMPFILE2 | $XSV_SEARCH -s $COLUMN "." | $COMPRESS > "${TEMPFILE3}.gz"
+        echo -e "${bold}XSV is removing empty rows in $TEMPFILE2.${reset}"
+        $DECOMPRESS $TEMPFILE2 | $XSV_SEARCH -s $LINKCOL "." | $COMPRESS > "${TEMPFILE3}.gz"
+        XSVErrorEscape
 
-            COUNT_RESULT=$($DECOMPRESS ${TEMPFILE3}.gz | xsv count)
-            COUNT=" --count $COUNT_RESULT"
-
-            return
-
-    else
-        echo -e "${green}XSV is extracting 'links' column in $1.${reset}"
-        $XSV_SELECT -o $TEMPFILE1 $COLUMN $DATAFILE
-
-        echo -e "${green}XSV is separating URLs in $TEMPFILE1.${reset}"
-        $XSV_EXPLODE -o $TEMPFILE2 $COLUMN "|" $TEMPFILE1
-
-        echo -e "${green}XSV is removing empty rows in $TEMPFILE2.${reset}"
-        $XSV_SEARCH -s $COLUMN -o $TEMPFILE3 "." $TEMPFILE2
-
-        COUNT_RESULT=$(xsv count $TEMPFILE3)
+        echo -e "${bold}XSV is counting the number of rows in $TEMPFILE3.${reset}"
+        COUNT_RESULT=$($DECOMPRESS ${TEMPFILE3}.gz | xsv count)
+        XSVErrorEscape
         COUNT=" --count $COUNT_RESULT"
 
+        # Clean up
+        rm "${TEMPFILE1}.gz" "${TEMPFILE2}.gz"
+
         return
+
+    else
+        echo -e "${bold}XSV is extracting the columns '${IDCOL}' and '${LINKCOL}' in $1.${reset}"
+        $XSV_SELECT -o $TEMPFILE1 ${IDCOL},${LINKCOL} $DATAFILE
+        XSVErrorEscape
+
+        echo -e "${bold}XSV is separating URLs in $TEMPFILE1.${reset}"
+        $XSV_EXPLODE -o $TEMPFILE2 $LINKCOL "|" $TEMPFILE1
+        XSVErrorEscape
+
+        echo -e "${bold}XSV is removing empty rows in $TEMPFILE2.${reset}"
+        $XSV_SEARCH -s $LINKCOL -o $TEMPFILE3 "." $TEMPFILE2
+        XSVErrorEscape
+
+        echo -e "${bold}XSV is counting the number of rows in $TEMPFILE3.${reset}"
+        COUNT_RESULT=$(xsv count $TEMPFILE3)
+        XSVErrorEscape
+        COUNT=" --count $COUNT_RESULT"
+
+        # Clean up
+        rm $TEMPFILE1 $TEMPFILE2
+
+        return
+
+    fi
+
+}
+
+XSVErrorEscape()
+{
+    status="$?"
+    if [ $status -ne 0 ]; then 
+        echo -e "${yellow}XSV encountered an error.${reset}" 
+        echo -e "${red}The program has exited.${reset}"
+        exit
+    else
+        echo -e "    ${green}Success.${reset}"
+    fi
+}
+
+ParseColumnNames()
+{
+    if [ $# -lt 2 ]; then
+        echo -e "${red}Error: Please include 2 arguments after the option -s.${reset}"
+        exit
+    fi
+
+    ARGID=$1
+    ARGLINK=$2
+
+    if [ "${ARGID:0:1}" == "-" ]; then
+        echo -e "${red}Error: No argument given to declare the ID column. After the -s option, please include 2 arguments separated by a single space.${reset}"
+        exit
+    else
+        IDCOL=$1
+        ID_OPTION=" --id ${IDCOL}"
+    fi
+
+    # Works when reversed. Figure out why.
+    if [ "${ARGLINK:0:1}" == "-" ]; then
+        echo -e "${red}Error: No argument given to declare the links column. After the -s option, please include 2 arguments separated by a single space.${reset}"
+        exit
+    else
+        LINKCOL=$2
+        LINKS_OPTION=" --links ${LINKCOL}"
+    fi
+
+}
+
+# ---------------------------------------------
+#               MAIN PROCESS
+# ---------------------------------------------
+Process()
+{
+    echo -e "\n----------------------------------------"
+    if [ -f $1 ] && [[ $1 == *.csv ]] || [[ $1 == *.csv.gz ]]; then
+        echo -e "Working on file ${inverted}${1}${reset}."
+        GetBasename $1
+        PreProcess $1
+        if [ $DIR ]; then
+            OUTPUT=""
+            LOG=""
+        fi
+        echo "running python script with options: ${1}${ID_OPTION}${LINKS_OPTION}${COUNT}${OUTPUT}${LOG}"
+        python dummy.py ${1}${ID_OPTION}${LINKS_OPTION}${COUNT}${OUTPUT}${LOG}
+    else
+        echo -e "Skipping ${inverted}${1}${reset} because it is not a CSV file."
     fi
 }
 
@@ -114,12 +197,12 @@ PreProcess() # parameter: file path
 #                MAIN SCRIPT
 # ---------------------------------------------
 
-mkdir -p data
-mkdir -p temp
+mkdir -p preprocessing
+IDCOL="id"
+LINKCOL="links"
 
 # ---------------------------------------------
 #   PARSING OPTIONS
-COLUMN="links"
 while [ $# -gt 0 ]
 do
     case "$1" in
@@ -134,7 +217,8 @@ do
             Help
             ;;
         -s) options="$options $1"
-            COLUMN="$2"
+            ParseColumnNames $2 $3
+            shift
             shift
             ;;
         -o) options="$options $1"
@@ -156,29 +240,17 @@ if [[ -z "$DATA" ]]
 fi
 
 Decompresser
-# ---------------------------------------------
-#   EXECUTING SCRIPT ON FILES IN DIRECTORY
-if [ -d $DATA ]
-    then
-        for FILE in $DATA*.csv.gz; do
-            GetBasename $FILE
-            PreProcess $FILE
-            echo "running python with options:${COUNT}${OUTPUT}${LOG}"
-            python main.py ${FILE}${COUNT}${OUTPUT}${LOG}
-        done
 
-# ---------------------------------------------
-#       EXECUTING SCRIPT ON SINGLE FILE
-elif [ -f $DATA ] && [[ $DATA == *.csv ]] || [[ $DATA == *.csv.gz ]]
-    then
-        GetBasename $DATA
-        PreProcess $DATA
-        echo "running python with options:${COUNT}${OUTPUT}${LOG}"
-        python main.py ${DATA}${COUNT}${OUTPUT}${LOG}
-
-# ---------------------------------------------
-#                  ERROR
+if [ -d $DATA ]; then DIR=$DATA
+elif [ -f $DATA ] && [[ $DATA == *.csv ]] || [[ $DATA == *.csv.gz ]]; then FILE=$DATA
 else
     echo -e "${yellow}Error: The first argument must be either a directory or a CSV file. Only the '.gz' extension is permitted for compressed CSV files.${reset}"
     exit
+fi
+
+if [ $FILE ]; then Process $FILE
+else
+    for FILE in $DIR*; do
+        Process $FILE
+    done
 fi
