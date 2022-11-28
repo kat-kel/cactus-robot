@@ -2,6 +2,12 @@
 
 This program parses URLs in datasets conforming to Twitter API's export and/or [Gazouilloire](https://github.com/medialab/gazouilloire), a long-term tweet collection tool from Science Po's médialab. From a dataset, the program extracts tweets' IDs and linked URLs. It then yields a CSV file with enriched metadata about valid, active URLs. The enrichments includes (1) agregated counts about the URL in the dataset, (2) metadata about the URL itself, and (3) metadata about certain social media sites if the URL is from one of the studied sources.
 
+## Quick test
+With the requirements installed in a virtual environment (`pip install -r requirements.txt`), you can quickly see this program in action using the example dataset downloaded with this repository.
+```shell
+$ ./run.sh -f data/sampleData.csv
+```
+
 ---
 ---
 # States of the data
