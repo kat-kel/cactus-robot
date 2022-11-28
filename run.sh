@@ -79,7 +79,7 @@ Decompresser()
 PreProcess() # parameter: file path
 {
     DATAFILE=$1
-    TEMPFILE3="preprocessing/${BASENAME}_id-links.csv"
+    PREPROCESSEDFILE="preprocessing/${BASENAME}.ID-and-Links.csv"
 
     if [[ ${DATAFILE} == *.gz ]]; then
         echo -e "${bold}XSV is extracting the columns '${IDCOL}' and '${LINKCOL}' in $DATAFILE.${reset}"
@@ -91,11 +91,11 @@ PreProcess() # parameter: file path
         XSVErrorEscape
 
         echo -e "${bold}XSV is removing empty rows in $TEMPFILE2.${reset}"
-        $DECOMPRESS $TEMPFILE2 | $XSV_SEARCH -s $LINKCOL "." | $COMPRESS > "${TEMPFILE3}.gz"
+        $DECOMPRESS $TEMPFILE2 | $XSV_SEARCH -s $LINKCOL "." | $COMPRESS > "${PREPROCESSEDFILE}.gz"
         XSVErrorEscape
 
-        echo -e "${bold}XSV is counting the number of rows in $TEMPFILE3.${reset}"
-        COUNT_RESULT=$($DECOMPRESS ${TEMPFILE3}.gz | xsv count)
+        echo -e "${bold}XSV is counting the number of rows in $PREPROCESSEDFILE.${reset}"
+        COUNT_RESULT=$($DECOMPRESS ${PREPROCESSEDFILE}.gz | xsv count)
         XSVErrorEscape
         COUNT=" --count $COUNT_RESULT"
 
@@ -114,11 +114,11 @@ PreProcess() # parameter: file path
         XSVErrorEscape
 
         echo -e "${bold}XSV is removing empty rows in $TEMPFILE2.${reset}"
-        $XSV_SEARCH -s $LINKCOL -o $TEMPFILE3 "." $TEMPFILE2
+        $XSV_SEARCH -s $LINKCOL -o $PREPROCESSEDFILE "." $TEMPFILE2
         XSVErrorEscape
 
-        echo -e "${bold}XSV is counting the number of rows in $TEMPFILE3.${reset}"
-        COUNT_RESULT=$(xsv count $TEMPFILE3)
+        echo -e "${bold}XSV is counting the number of rows in $PREPROCESSEDFILE.${reset}"
+        COUNT_RESULT=$(xsv count $PREPROCESSEDFILE)
         XSVErrorEscape
         COUNT=" --count $COUNT_RESULT"
 
@@ -186,8 +186,8 @@ Process()
             OUTPUT=""
             LOG=""
         fi
-        echo "running python script with options: ${1}${ID_OPTION}${LINKS_OPTION}${COUNT}${OUTPUT}${LOG}"
-        python dummy.py ${1}${ID_OPTION}${LINKS_OPTION}${COUNT}${OUTPUT}${LOG}
+        echo "running python script with options: ${PREPROCESSEDFILE}${ID_OPTION}${LINKS_OPTION}${COUNT}${OUTPUT}${LOG}"
+        python src/main.py ${PREPROCESSEDFILE}${ID_OPTION}${LINKS_OPTION}${COUNT}${OUTPUT}${LOG}
     else
         echo -e "Skipping ${inverted}${1}${reset} because it is not a CSV file."
     fi

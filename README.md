@@ -8,9 +8,9 @@ The incoming data file must have an ID for each tweet and a column containing th
 |id|...|links|
 |-|-|-|
 |1564138363136909312|...||
-|1565043914381434881|...|https://twitter.com/franceinter/status/1556286125270093825\|https://www.radiofrance.fr/franceinter/les-milliardaires-et-les-stars-irrites-par-le-suivi-en-ligne-de-leurs-trajets-aeriens-4327256|
-|1564626931353616386|...|https://l.franceculture.fr/qhT|
-1555931971188150272|..|https://www.radiofrance.fr/franceinter/les-milliardaires-et-les-stars-irrites-par-le-suivi-en-ligne-de-leurs-trajets-aeriens-4327256\|
+|1565043914381434881|...|https://www.youtube.com/watch?v=4acSVmN3XT4\|https://twitter.com/kingsdh/status/1597146442430578690|
+|1564626931353616386|...|https://www.youtube.com/watch?v=4acSVmN3XT4|
+1555931971188150272|..|https://twitter.com/kingsdh/status/1597146442430578690|
 
 ## Preprocessing
 
@@ -18,10 +18,10 @@ Using the Rust tool `xsv`, the program preprocesses the data. First, it removes 
 
 |id|links|
 |-|-|
-|1565043914381434881|https://twitter.com/franceinter/status/1556286125270093825|
-|1565043914381434881|https://www.radiofrance.fr/franceinter/les-milliardaires-et-les-stars-irrites-par-le-suivi-en-ligne-de-leurs-trajets-aeriens-4327256|
-|1564626931353616386|https://l.franceculture.fr/qhT|
-1555931971188150272|https://www.radiofrance.fr/franceinter/les-milliardaires-et-les-stars-irrites-par-le-suivi-en-ligne-de-leurs-trajets-aeriens-4327256\|
+|1565043914381434881|https://www.youtube.com/watch?v=4acSVmN3XT4|
+|1565043914381434881|https://twitter.com/kingsdh/status/1597146442430578690|
+|1564626931353616386|https://www.youtube.com/watch?v=4acSVmN3XT4|
+1555931971188150272|https://twitter.com/kingsdh/status/1597146442430578690|
 
 ## Enriched Links Data
 
@@ -29,23 +29,26 @@ Using its Python scripts, the program then analyzes all the links in the preproc
 
 1. **raw_url** : raw version of the link*
 
+    *Example*:
     |raw_url|
     |-|
-    |https://www.radiofrance.fr/franceinter/les-milliardaires-et-les-stars-irrites-par-le-suivi-en-ligne-de-leurs-trajets-aeriens-4327256|
+    |https://www.youtube.com/watch?v=4acSVmN3XT4|
 
-\* If multiple tweets contain links that normalize to the same URL but are composed differently, the field `input` only contains the first raw version of the link that the program encountered. Subsequent versions are not recorded, though their presence in the dataset is recorded in the `count` and `tweet_ids` fields.
+\* If multiple tweets contain links that normalize to the same URL but are composed differently, the field `raw_url` only contains the first raw version of the link that the program encountered. Subsequent versions are not recorded, though their presence in the dataset is recorded in the `count` and `tweet_ids` fields.
 
 ---
 
 2. **normalized_url** : normalized version of the link
 
+    *Example*:
     |normalized_url|
     |-|
-    |radiofrance.fr/franceinter/les-milliardaires-et-les-stars-irrites-par-le-suivi-en-ligne-de-leurs-trajets-aeriens-4327256|
+    |youtube.com/watch?v=4acSVmN3XT4|
 ---
 
 3. **count** : number of times the link (according to its normalized version) appeared in the dataset
 
+    *Example*:
     |count|
     |-|
     |2|
@@ -53,45 +56,84 @@ Using its Python scripts, the program then analyzes all the links in the preproc
 
 4. **tweet_ids** : IDs of the tweets that contained the link
 
+    *Example*:
     |tweet_ids|
     |-|
-    |1565043914381434881\|1555931971188150272|
+    |1565043914381434881\|1564626931353616386|
 ---
 
 5. **domain** : domain name of the normalized URL
 
+    *Example*:
     |domain|
     |-|
-    |radiofrance.fr|
+    |youtube.com|
 ---
 
 6. **subdomain** : concatenation of the subdomain and domain name of the normalized URL
 
+    *Example*:
     |subdomain|
     |-|
-    |radiofrance.fr|
+    |youtube.com|
 ---
 
 7. **hostname** : normalized hostname of the normalized URL
 
+    *Example*:
     |hostname|
     |-|
-    |radiofrance.fr|
+    |youtube.com|
 ---
 
 8. **twitter_user** : if the link is from Twitter\.com, the Twitter user's handle
 
+    *Example*:
+    |twitter_user|
+    |-|
+    |[none]|
+---
 
-9. **youtube_channel_name** : if the link is from Youtube\.com, the name of the channel / the video's channel
+9. **youtube_channel_name** : if the link is from Youtube\.com and a channel, the name of the channel
+
+    *Example*:
+    |youtube_channel_name|
+    |-|
+    |[none]|
+---
+
+10. **youtube_channel_id** : if the link is from Youtube\.com and a video or channel, the ID of the channel
+
+    *Example*:
+    |youtube_channel_id|
+    |-|
+    |UCLq9OzDa0HBnj_sNyEkdZJg|
+---
 
 
-10. **youtube_channel_id** : if the link is from Youtube\.com, the ID of the channel / the video's channel
+11. **youtube_channel_link** : if the link is from Youtube\.com and a video or channel, a link to the channel
 
+    *Example*:
+    |youtube_channel_link|
+    |-|
+    |https://youtube.com/channel/UCLq9OzDa0HBnj_sNyEkdZJg|
+---
 
-11. **youtube_channel_link** : if the link is from Youtube\.com, a link to the channel / the video's channel
+12. **facebook_group_name** : if the link is from Facebook\.com and a public Facebook group, the group's name (if available)
 
+    *Example*:
+    |facebook_group_name|
+    |-|
+    |[none]|
+---
 
-12. **facebook_group_id** : if the link is from Facebook\.com and a public Facebook group, the group's ID
+13. **facebook_group_id** : if the link is from Facebook\.com and a public Facebook group, the group's ID (if available)
+
+    *Example*:
+    |facebook_group_id|
+    |-|
+    |[none]|
+---
 
 
 # Program Requirements
