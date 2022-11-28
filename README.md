@@ -2,6 +2,11 @@
 
 This program parses URLs in datasets conforming to Twitter API's export and/or [Gazouilloire](https://github.com/medialab/gazouilloire), a long-term tweet collection tool from Science Po's médialab, and yields an enriched CSV file containing information about each unique URL.
 
+Example:
+|raw_url|normalized_url|count|ids|domain|subdomain|hostname|twitter_user|youtube_channel_name|youtube_channel_id|youtube_channel_link|facebook_group_name|facebook_group_id|
+|--|--|--|--|--|--|--|--|--|--|--|--|--|
+|https://www.youtube.com/watch?v=4acSVmN3XT4|youtube.com/watch?v=4acSVmN3XT4|2|1565043914381434881\|1564626931353616386|youtube.com|youtube.com|youtube.com|[none]|[none]|UCLq9OzDa0HBnj_sNyEkdZJg|https://youtube.com/channel/UCLq9OzDa0HBnj_sNyEkdZJg|[none]|[none]|
+
 [--> more detailed description](description.md)
 
 ---
