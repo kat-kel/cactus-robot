@@ -2,7 +2,7 @@
 
 This program parses URLs in datasets conforming to Twitter API's export and/or [Gazouilloire](https://github.com/medialab/gazouilloire), a long-term tweet collection tool from Science Po's médialab, and yields an enriched CSV file containing information about each unique URL.
 
-[--> more detailed description.](description.md)
+[--> more detailed description](description.md)
 
 ---
 
