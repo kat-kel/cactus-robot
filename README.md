@@ -75,19 +75,19 @@ $ ./run.sh -f DIRECTORY/
 ```
 
 # Files created during the program's execution
+To optimize performance, the program creates several data files in the directory `./cache/`. The file `./cache/notNormalizedLog.json` holds a log of links which the program is not capable of analyzing. The file `./cache/normalizationCache.json` records links whose resolution and/or normalization a previous execution of the program has already done. Both file types are JSON so that the Python script deserializes the data quickly and can efficiently check the index for one of the links it is currently processing.
 ```mermaid
 flowchart TD
 subgraph URL normalization and link aggregation
     input[/preprocessing/\ndataFile.ID-and-Links.csv/]
     input-->|link with normalized URL|cache[/cache/\nnormalizationCache.json/]
     input-->|link not normalized|log[/cache/\nnotNormalizedLog.json/]
-    cache-->|links with associated tweet IDs|aggregate[/cache/link_aggregates\ndataFile.json/]
+    cache-->|links with associated tweet IDs|aggregate[/cache/link_aggregates/\ndataFile.json/]
 end
 subgraph Analysis of normalized URLs
     aggregate-->outfile[/output/\ndataFile_enriched.csv/]
 end
 ```
-To optimise performance, the program creates several data files in the directory `./cache/`. The file `./cache/notNormalizedLog.json` holds a log of links which the program is not capable of analyzing. The file `./cache/normalizationCache.json` records links whose resolution and/or normalization a previous execution of the program has already done. Both file types are JSON so that the Python script deserializes the data quickly and can efficiently check the index for one of the links it is currently processing.
 
 Example of a good link and its normalization cached in `./cache/normalizationCache.json`
 ```json
