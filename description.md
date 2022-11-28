@@ -81,6 +81,49 @@ When a tweet's link is determined to be good, the program not only adds it and i
 ```
 The final CSV file, which is written to the directory `./output/`, draws from the aggregates object. The aggregates are nevertheless written to a file for two reasons. The first is to protect data in case the program is interrupted in its final stages. Second, if the user wants to work with the aggregates' serialized data, the file can be found in `./cache/link_aggregates/` under the name of the input file.
 
+# Life cycle of a row from the dataset
+```mermaid
+flowchart TD
+
+    row_id(id)
+    row_link(link)
+
+    row_link-->is_url{is\nurl}
+    is_url-->|True|should_resolve{should\nresolve}
+    is_url-->|False|log[/log:\nlink, problem/]
+    is_youtube-->|False|log
+    should_resolve-->|True|is_youtube{is\nYoutube\nURL}
+
+    should_resolve-->|False|normalized_url(normalized url)
+
+    is_youtube-->|True|resolved_url[multithreaded resolution]
+    resolved_url-->newlink(new link)
+    newlink-->normalized_url
+
+    cachedata[/cache:\nnormalized URL, link/]
+    row_link-->cachedata
+    normalized_url-->cachedata
+
+    normalized_url-->agg[/aggregate:\nnormalized URL, link, id/]
+    row_id-->agg
+    newlink-->whichlink{which link}
+    row_link-->whichlink
+    whichlink-->|resolved link|agg
+    whichlink-->|input link|agg
+```
+
+```python
+if not is_url(url): self.message = "not URL"
+
+        elif should_resolve(url):
+            if is_youtube_url(url):
+                self.needs_resolved = True
+            else: self.message = "not resolved"
+
+        else:
+            self.normalized_url = normalize_url(url)
+```
+
 # File systems
 
 ## Directly work with one CSV file
