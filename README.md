@@ -2,7 +2,11 @@
 
 This program parses URLS in datasets conforming to Twitter API's export and/or [Gazouilloire](https://github.com/medialab/gazouilloire), a long-term tweet collection tool from Science Po's médialab. From a dataset, the program extracts tweets' IDs and linked URLs. It then yields a CSV file with enriched metadata about valid, active URLS. The enrichments includes (1) agregated counts about the URL in the dataset, (2) metadata about the URL itself, and (3) metadata about certain social media sites if the URL is from one of the studied sources.
 
-## Raw Tweet Data
+---
+---
+# States of the data
+
+## 1. Raw data input to program
 The incoming data file must have an ID for each tweet and a column containing the URLs linked to the tweet. If a tweet contains multiple URLs (i.e. tweet `1565043914381434881`), they must be separated by a pipe `|`. Twitter's API returns data already in this format, as does Gazouilloire.
 
 |id|...|links|
@@ -12,7 +16,8 @@ The incoming data file must have an ID for each tweet and a column containing th
 |1564626931353616386|...|https://www.youtube.com/watch?v=4acSVmN3XT4|
 1555931971188150272|..|https://twitter.com/kingsdh/status/1597146442430578690|
 
-## Preprocessing
+---
+## 2. Preprocessing the data
 
 Using the Rust tool `xsv`, the program preprocesses the data. First, it removes everything but the ID and links columns. Second, it creates a unique row for every link, "exploding" links that might have been concatenated and separated by a pipe (i.e. tweet `1565043914381434881`). Finally, it removes any tweets which do not contain links (i.e. tweet `1564138363136909312`), yielding a cleaned dataset that can be accessed later in the directory `preprocessing/`.
 
@@ -23,123 +28,22 @@ Using the Rust tool `xsv`, the program preprocesses the data. First, it removes 
 |1564626931353616386|https://www.youtube.com/watch?v=4acSVmN3XT4|
 1555931971188150272|https://twitter.com/kingsdh/status/1597146442430578690|
 
-## Enriched Links Data
+---
+## 3. Enriched data output to CSV file
 
 Using its Python scripts, the program then analyzes all the links in the preprocessed dataset and yields an enriched CSV with the following fields:
 
-1. **raw_url** : raw version of the link*
-
-    *Example*:
-    |raw_url|
-    |-|
-    |https://www.youtube.com/watch?v=4acSVmN3XT4|
-
-\* If multiple tweets contain links that normalize to the same URL but are composed differently, the field `raw_url` only contains the first raw version of the link that the program encountered. Subsequent versions are not recorded, though their presence in the dataset is recorded in the `count` and `tweet_ids` fields.
+|raw_url|normalized_url|count|ids|domain|subdomain|hostname|twitter_user|youtube_channel_name|youtube_channel_id|youtube_channel_link|facebook_group_name|facebook_group_id|
+|--|--|--|--|--|--|--|--|--|--|--|--|--|
+|https://www.youtube.com/watch?v=4acSVmN3XT4|youtube.com/watch?v=4acSVmN3XT4|2|1565043914381434881\|1564626931353616386|youtube.com|youtube.com|youtube.com|[none]|[none]|UCLq9OzDa0HBnj_sNyEkdZJg|https://youtube.com/channel/UCLq9OzDa0HBnj_sNyEkdZJg|[none]|[none]|
 
 ---
-
-2. **normalized_url** : normalized version of the link
-
-    *Example*:
-    |normalized_url|
-    |-|
-    |youtube.com/watch?v=4acSVmN3XT4|
 ---
 
-3. **count** : number of times the link (according to its normalized version) appeared in the dataset
-
-    *Example*:
-    |count|
-    |-|
-    |2|
----
-
-4. **tweet_ids** : IDs of the tweets that contained the link
-
-    *Example*:
-    |tweet_ids|
-    |-|
-    |1565043914381434881\|1564626931353616386|
----
-
-5. **domain** : domain name of the normalized URL
-
-    *Example*:
-    |domain|
-    |-|
-    |youtube.com|
----
-
-6. **subdomain** : concatenation of the subdomain and domain name of the normalized URL
-
-    *Example*:
-    |subdomain|
-    |-|
-    |youtube.com|
----
-
-7. **hostname** : normalized hostname of the normalized URL
-
-    *Example*:
-    |hostname|
-    |-|
-    |youtube.com|
----
-
-8. **twitter_user** : if the link is from Twitter\.com, the Twitter user's handle
-
-    *Example*:
-    |twitter_user|
-    |-|
-    |[none]|
----
-
-9. **youtube_channel_name** : if the link is from Youtube\.com and a channel, the name of the channel
-
-    *Example*:
-    |youtube_channel_name|
-    |-|
-    |[none]|
----
-
-10. **youtube_channel_id** : if the link is from Youtube\.com and a video or channel, the ID of the channel
-
-    *Example*:
-    |youtube_channel_id|
-    |-|
-    |UCLq9OzDa0HBnj_sNyEkdZJg|
----
-
-
-11. **youtube_channel_link** : if the link is from Youtube\.com and a video or channel, a link to the channel
-
-    *Example*:
-    |youtube_channel_link|
-    |-|
-    |https://youtube.com/channel/UCLq9OzDa0HBnj_sNyEkdZJg|
----
-
-12. **facebook_group_name** : if the link is from Facebook\.com and a public Facebook group, the group's name (if available)
-
-    *Example*:
-    |facebook_group_name|
-    |-|
-    |[none]|
----
-
-13. **facebook_group_id** : if the link is from Facebook\.com and a public Facebook group, the group's ID (if available)
-
-    *Example*:
-    |facebook_group_id|
-    |-|
-    |[none]|
----
-
-
-# Program Requirements
+# Program requirements
 The program requires Python 3.10 (and some libraries) as well as a tool coded in Rust named `xsv`, which is called during the bash script and used to parse the incoming CSV file(s). To install `xsv`, follow the instructions for [the forked version maintained by Sciences Po's médialab](https://github.com/medialab/xsv).
 
-# How-To
+# How-to
 
 1. Clone this repository and change to that directory.
 ```shell
@@ -153,13 +57,13 @@ $ cd cactus-robot
 
 4. While still in the directory `cactus-robot/`, launch the program by calling the bash script with the necessary options.
 
-# File Systems
+# File systems
 
 ## Directly work with one CSV file
 Analyze links in one Twitter or Gazouilloire export. This file can either be open with the extension `.csv` or it can be compressed with the extension `.csv.gz`. The incoming file is never modified, only read.
 
 ```shell
-$ ./run.sh-f FILE.CSV
+$ ./run.sh -f FILE.CSV
 ```
 
 ## Iterate through CSV files in a directory
@@ -169,6 +73,58 @@ Analyze links in a batch of Twitter or Gazouilloire exports stored inside a dire
 ```shell
 $ ./run.sh -f DIRECTORY/
 ```
+
+# Files created during the program's execution
+```mermaid
+flowchart TD
+subgraph URL normalization and link aggregation
+    input[/preprocessing/\ndataFile.ID-and-Links.csv/]
+    input-->|link with normalized URL|cache[/cache/\nnormalizationCache.json/]
+    input-->|link not normalized|log[/cache/\nnotNormalizedLog.json/]
+    cache-->|links with associated tweet IDs|aggregate[/cache/link_aggregates\ndataFile.json/]
+end
+subgraph Analysis of normalized URLs
+    aggregate-->outfile[/output/\ndataFile_enriched.csv/]
+end
+```
+To optimise performance, the program creates several data files in the directory `./cache/`. The file `./cache/notNormalizedLog.json` holds a log of links which the program is not capable of analyzing. The file `./cache/normalizationCache.json` records links whose resolution and/or normalization a previous execution of the program has already done. Both file types are JSON so that the Python script deserializes the data quickly and can efficiently check the index for one of the links it is currently processing.
+
+Example of a good link and its normalization cached in `./cache/normalizationCache.json`
+```json
+{
+    "https://twitter.com/kingsdh/status/1597146442430578690": {
+        "raw link": "https://twitter.com/kingsdh/status/1597146442430578690",
+        "normalization": "twitter.com/kingsdh/status/1597146442430578690"
+    }
+}
+```
+Example of a bad link logged in `./cache/notNormalizedLog.json`
+```json
+{
+    "garble": {
+        "raw link": "garble",
+        "message": "not URL"
+    }
+}
+```
+
+When a tweet's link is determined to be good, the program not only adds it and its normalization to the cache (if not already present) it also adds the tweet's ID to an aggregation of all the tweets that contained a version of that link, which all normalize to the same URL. In other words, the program aggregates tweets that link to the same media. The media's identity is determined via the normalization of the link, in order to not differentiate versions of the same URL that various tweets might have included.
+
+```json
+{
+    "twitter.com/kingsdh/status/1597146442430578690": {
+        "normalized url": "twitter.com/kingsdh/status/1597146442430578690",
+        "first raw link": "https://twitter.com/kingsdh/status/1597146442430578690",
+        "ids": [
+            "1",
+            "4",
+            "5"
+        ]
+    }
+}
+```
+The final CSV file, which is written to the directory `./output/`, draws from the aggregates object. The aggregates are nevertheless written to a file for two reasons. The first is to protect data in case the program is interrupted in its final stages. Second, if the user wants to work with the aggregates' serialized data, the file can be found in `./cache/link_aggregates/` under the name of the input file.
+
 
 # Options
 
