@@ -21,7 +21,7 @@ $ cd cactus-robot
 
 3. In that virtual Python environment, install the Python dependencies listed in the `requirements.txt` file.
 
-4. While still in the directory `cactus-robot/`, launch the program by calling the bash script with the necessary options.
+4. While still in the directory `cactus-robot/`, launch the program by calling the bash script with the necessary options. ([--> description of options](https://github.com/kat-kel/cactus-robot/blob/main/description.md#options))
 ```shell
 $ ./run.sh -f data/sampleData.csv
 ```
