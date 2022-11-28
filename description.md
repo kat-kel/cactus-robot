@@ -111,11 +111,11 @@ subgraph cache
 end
 subgraph aggregate
     normalized_url-->agg[/aggregate:\nnormalized URL, link, id/]
-    row_id-->agg
     newlink-->whichlink{which link}
     row_link-->whichlink
     whichlink-->|resolved link|agg
     whichlink-->|input link|agg
+    row_id-->agg
 end
 ```
 
