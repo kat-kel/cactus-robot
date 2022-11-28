@@ -119,18 +119,6 @@ subgraph aggregate
 end
 ```
 
-```python
-if not is_url(url): self.message = "not URL"
-
-        elif should_resolve(url):
-            if is_youtube_url(url):
-                self.needs_resolved = True
-            else: self.message = "not resolved"
-
-        else:
-            self.normalized_url = normalize_url(url)
-```
-
 # File systems
 
 ## Directly work with one CSV file
