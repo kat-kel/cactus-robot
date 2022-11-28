@@ -85,31 +85,38 @@ The final CSV file, which is written to the directory `./output/`, draws from th
 ```mermaid
 flowchart TD
 
-    row_id(id)
+subgraph row
+row_id(id)
     row_link(link)
+end
 
+subgraph inspect link
     row_link-->is_url{is\nurl}
     is_url-->|True|should_resolve{should\nresolve}
     is_url-->|False|log[/log:\nlink, problem/]
     is_youtube-->|False|log
     should_resolve-->|True|is_youtube{is\nYoutube\nURL}
+end
 
+subgraph resolve and/or normalize link
     should_resolve-->|False|normalized_url(normalized url)
-
     is_youtube-->|True|resolved_url[multithreaded resolution]
     resolved_url-->newlink(new link)
     newlink-->normalized_url
-
+end
+subgraph cache
     cachedata[/cache:\nnormalized URL, link/]
     row_link-->cachedata
     normalized_url-->cachedata
-
+end
+subgraph aggregate
     normalized_url-->agg[/aggregate:\nnormalized URL, link, id/]
     row_id-->agg
     newlink-->whichlink{which link}
     row_link-->whichlink
     whichlink-->|resolved link|agg
     whichlink-->|input link|agg
+end
 ```
 
 ```python
